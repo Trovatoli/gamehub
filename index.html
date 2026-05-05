@@ -696,39 +696,46 @@ function fbErrMsg(code){
 
 // ── DATABASE REST ────────────────────────────────
 async function fbGet(path){
-  const auth=fbToken?`?auth=${fbToken}`:'';
+  const auth=fbToken?'?auth='+fbToken:'';
   try{
-    const r=await fetch(`${FB_DB_URL}/${path}.json${auth}`);
-    return await r.json();
-  }catch(e){return null;}
+    let r=await fetch(FB_DB_URL+'/'+path+'.json'+auth);
+    // If auth fails, try without token (for public paths like rooms)
+    if(!r.ok&&fbToken){r=await fetch(FB_DB_URL+'/'+path+'.json');}
+    if(!r.ok){console.error('fbGet error:',path,r.status);return null;}
+    const data=await r.json();
+    // Firebase returns null for missing paths
+    return data;
+  }catch(e){console.error('fbGet network error:',e);return null;}
 }
 
 async function fbSet(path,data){
-  const auth=fbToken?`?auth=${fbToken}`:'';
+  const auth=fbToken?'?auth='+fbToken:'';
   try{
-    await fetch(`${FB_DB_URL}/${path}.json${auth}`,{
+    const r=await fetch(FB_DB_URL+'/'+path+'.json'+auth,{
       method:'PUT',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(data)
     });
+    if(!r.ok){const err=await r.json();console.error('fbSet error:',path,err);return false;}
     return true;
-  }catch(e){return false;}
+  }catch(e){console.error('fbSet network error:',e);return false;}
 }
 
 async function fbUpdate(path,data){
-  const auth=fbToken?`?auth=${fbToken}`:'';
+  const auth=fbToken?'?auth='+fbToken:'';
   try{
-    await fetch(`${FB_DB_URL}/${path}.json${auth}`,{
+    const r=await fetch(FB_DB_URL+'/'+path+'.json'+auth,{
       method:'PATCH',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(data)
     });
+    if(!r.ok){const err=await r.json();console.error('fbUpdate error:',path,err);return false;}
     return true;
-  }catch(e){return false;}
+  }catch(e){console.error('fbUpdate network error:',e);return false;}
 }
 
 async function fbDelete(path){
-  const auth=fbToken?`?auth=${fbToken}`:'';
+  const auth=fbToken?'?auth='+fbToken:'';
   try{
-    await fetch(`${FB_DB_URL}/${path}.json${auth}`,{method:'DELETE'});
+    await fetch(FB_DB_URL+'/'+path+'.json'+auth,{method:'DELETE'});
     return true;
   }catch(e){return false;}
 }
@@ -771,6 +778,7 @@ let onlineRoomId=null,onlineGameType=null,onlineRole=null,onlinePollTimer=null;
 
 async function createOnlineRoom(gameType){
   if(!fbUser||!fbToken){showToast('Bitte zuerst einloggen!');return;}
+  showToast('Erstelle Raum...');
   const roomId=Math.random().toString(36).substr(2,6).toUpperCase();
   onlineRoomId=roomId;
   onlineGameType=gameType;
@@ -785,7 +793,7 @@ async function createOnlineRoom(gameType){
     created:Date.now()
   });
 
-  if(!ok){showToast('Fehler beim Erstellen des Raums');return;}
+  if(!ok){showToast('Fehler: Raum konnte nicht erstellt werden. Prüfe ob du eingeloggt bist.');return;}
   showOnlineWaiting(roomId,gameType);
 
   // Poll for guest joining every 2 seconds
@@ -803,8 +811,9 @@ async function createOnlineRoom(gameType){
 }
 
 async function joinOnlineRoom(code){
-  if(!fbUser||!fbToken){showToast('Bitte zuerst einloggen!');return;}
+  if(!fbUser||!fbToken){showToast('Bitte zuerst einloggen! (? Icon oben rechts)');return;}
   if(!code||code.length<4){showToast('Bitte einen gültigen Code eingeben');return;}
+  showToast('Suche Raum...');
   const roomId=code.trim().toUpperCase();
   const room=await fbGet('rooms/'+roomId);
   if(!room){showToast('❌ Raum "'+roomId+'" nicht gefunden');return;}
@@ -1509,11 +1518,10 @@ function renderLobbySelect(){
           <div class="ls-mode-name">${t('lobby.mode.local')}</div>
           <div class="ls-mode-sub">${t('lobby.mode.local.sub')}</div>
         </div>
-        <div class="ls-mode disabled" onclick="">
+        <div class="ls-mode${lsMode==='online'?' active':''}" onclick="lsMode='online';renderLobbySelect()">
           <span class="ls-mode-icon">🌐</span>
           <div class="ls-mode-name">${t('lobby.mode.online')}</div>
           <div class="ls-mode-sub">${t('lobby.mode.online.sub')}</div>
-          <span class="ls-mode-badge ls-badge-soon">${t('lobby.mode.soon')}</span>
         </div>
       </div>
     </div>
