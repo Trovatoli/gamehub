@@ -2044,27 +2044,27 @@ function initPong(opts){
   if(opts.isOnline && opts.onlineRoomId){
     const roomPath='rooms/'+opts.onlineRoomId+'/sync';
     const isHost=opts.isHost;
-    // Write my paddle + ball every 80ms, read opponent
     _safeInterval(async()=>{
       if(paused||over)return;
-      // Host controls ball, both write their paddle
+      // Host writes ball + own paddle; Guest writes own paddle
       const update=isHost
-        ?{p1y:p1y,bx:ball.x,by:ball.y,bvx:bvx,bvy:bvy,s1:s1,s2:s2}
+        ?{p1y:p1y,bx:bx,by:by,bvx:bvx,bvy:bvy,s1:s1,s2:s2}
         :{p2y:p2y};
       await fbUpdate(roomPath,update);
       const sync=await fbGet(roomPath);
       if(!sync)return;
       if(isHost){
-        // Host reads guest paddle
         if(sync.p2y!==undefined)p2y=Math.max(0,Math.min(H-PH,sync.p2y));
       } else {
-        // Guest reads host paddle + ball
         if(sync.p1y!==undefined)p1y=Math.max(0,Math.min(H-PH,sync.p1y));
-        if(sync.bx!==undefined){ball.x=sync.bx;ball.y=sync.by;bvx=sync.bvx;bvy=sync.bvy;}
-        if(sync.s1!==undefined){s1=sync.s1;s2=sync.s2;document.getElementById('s1').textContent=s1;document.getElementById('s2').textContent=s2;}
+        if(sync.bx!==undefined){bx=sync.bx;by=sync.by;bvx=sync.bvx;bvy=sync.bvy;}
+        if(sync.s1!==undefined){
+          s1=sync.s1;s2=sync.s2;
+          document.getElementById('s1').textContent=s1;
+          document.getElementById('s2').textContent=s2;
+        }
       }
     },80);
-    // Also skip AI for online
   }
 
   draw();
