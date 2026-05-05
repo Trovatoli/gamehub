@@ -840,47 +840,97 @@ function cancelOnlineWait(){
 }
 
 function showOnlineWaiting(roomId,gameType){
+  const gameNames={snake:'🐍 Snake',pong:'🏓 Pong',vier:'🔴 4 Gewinnt',battle:'🚢 Schiffe versenken',kniffel:'🎲 Kniffel',pacman:'👾 Pac-Man'};
+  const shareUrl=location.href.split('?')[0]+'?join='+roomId;
+
   const el=document.createElement('div');
   el.id='online-waiting';
-  el.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92)';
+  el.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.95);font-family:inherit';
+
   el.innerHTML=
-    '<div style="background:#0d0d18;border:1px solid #1e1e38;border-radius:16px;padding:32px;text-align:center;max-width:400px;width:90%">'+
-    '<div style="font-size:36px;margin-bottom:12px">🌐</div>'+
-    '<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px">Warte auf Mitspieler...</div>'+
-    '<div style="font-size:12px;color:#6060a0;margin-bottom:20px">Teile diesen Code mit deinem Freund:</div>'+
-    '<div style="font-size:48px;font-weight:900;color:#00f5ff;letter-spacing:8px;margin-bottom:8px;font-family:monospace">'+roomId+'</div>'+
-    '<div style="font-size:11px;color:#3a3a5a;margin-bottom:4px">oder teile den Link:</div>'+
-    '<div id="share-link" style="font-size:11px;color:#00f5ff;word-break:break-all;margin-bottom:24px;padding:8px;background:#111;border-radius:6px;cursor:pointer">'+
-    location.href.split('?')[0]+'?join='+roomId+
+    '<div style="background:linear-gradient(135deg,#0d0d20,#0a0a18);border:1px solid #00f5ff40;border-radius:20px;padding:36px 32px;text-align:center;max-width:440px;width:92%;box-shadow:0 0 60px rgba(0,245,255,.15)">'+
+
+    // Header
+    '<div style="font-size:36px;margin-bottom:6px">🌐</div>'+
+    '<div style="font-size:11px;font-weight:700;color:#00f5ff;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px">Online Multiplayer</div>'+
+    '<div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:4px">'+gameNames[gameType]+'</div>'+
+    '<div style="font-size:13px;color:#6060a0;margin-bottom:28px">Warte auf deinen Mitspieler...</div>'+
+
+    // Code display
+    '<div style="background:#060614;border:2px solid #00f5ff30;border-radius:14px;padding:20px;margin-bottom:20px">'+
+      '<div style="font-size:11px;font-weight:700;color:#00f5ff;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Raum-Code</div>'+
+      '<div style="font-size:52px;font-weight:900;color:#00f5ff;letter-spacing:10px;font-family:monospace;text-shadow:0 0 20px rgba(0,245,255,.5)">'+roomId+'</div>'+
+      '<div style="font-size:11px;color:#3a3a5a;margin-top:8px">Teile diesen Code mit deinem Freund</div>'+
     '</div>'+
-    '<div style="font-size:12px;color:#4a4a6a;margin-bottom:20px" id="waiting-dots">Warte<span id="dots">...</span></div>'+
-    '<button onclick="cancelOnlineWait()" style="padding:10px 24px;background:transparent;border:1px solid #1e1e38;color:#6060a0;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px">Abbrechen</button>'+
+
+    // Share link
+    '<div style="margin-bottom:24px">'+
+      '<div style="font-size:11px;font-weight:700;color:#6060a0;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Oder Link teilen</div>'+
+      '<div id="share-link" style="background:#060614;border:1px solid #1e1e38;border-radius:10px;padding:10px 14px;font-size:11px;color:#00f5ff;word-break:break-all;cursor:pointer;transition:border-color .2s" title="Klicken zum Kopieren">'+
+        shareUrl+
+      '</div>'+
+      '<div id="copy-hint" style="font-size:10px;color:#3a3a5a;margin-top:4px">👆 Klicken zum Kopieren</div>'+
+    '</div>'+
+
+    // Status
+    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px">'+
+      '<div style="display:flex;gap:4px">'+
+        '<div style="width:6px;height:6px;border-radius:50%;background:#00f5ff;animation:pulse 1.2s infinite 0s"></div>'+
+        '<div style="width:6px;height:6px;border-radius:50%;background:#00f5ff;animation:pulse 1.2s infinite .4s"></div>'+
+        '<div style="width:6px;height:6px;border-radius:50%;background:#00f5ff;animation:pulse 1.2s infinite .8s"></div>'+
+      '</div>'+
+      '<span style="font-size:13px;color:#6060a0" id="waiting-status">Warte auf Verbindung...</span>'+
+    '</div>'+
+
+    // Cancel button
+    '<button id="cancel-wait-btn" style="padding:11px 32px;background:transparent;border:1px solid #1e1e38;color:#6060a0;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .2s">← Abbrechen</button>'+
+
+    // Pulse animation
+    '<style>@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}</style>'+
     '</div>';
+
   document.body.appendChild(el);
+
   // Copy link on click
-  const shareLink=document.getElementById('share-link');
-  if(shareLink)shareLink.addEventListener('click',()=>{
-    try{navigator.clipboard.writeText(shareLink.textContent).then(()=>showToast('Link kopiert! 📋'));}catch(e){}
+  const shareEl=document.getElementById('share-link');
+  if(shareEl)shareEl.addEventListener('click',()=>{
+    try{
+      navigator.clipboard.writeText(shareUrl).then(()=>{
+        shareEl.style.borderColor='#00f5ff';
+        document.getElementById('copy-hint').textContent='✅ Link kopiert!';
+        setTimeout(()=>{
+          shareEl.style.borderColor='#1e1e38';
+          document.getElementById('copy-hint').textContent='👆 Klicken zum Kopieren';
+        },2000);
+      });
+    }catch(e){
+      // Fallback
+      const inp=document.createElement('input');
+      inp.value=shareUrl;document.body.appendChild(inp);
+      inp.select();document.execCommand('copy');inp.remove();
+      document.getElementById('copy-hint').textContent='✅ Link kopiert!';
+    }
   });
 
-  // Animate dots
-  let d=0;
-  const dotsEl=document.getElementById('dots');
-  const dotsAnim=setInterval(()=>{
-    if(!document.getElementById('online-waiting')){clearInterval(dotsAnim);return;}
-    d=(d+1)%4;
-    if(dotsEl)dotsEl.textContent='.'.repeat(d+1);
-  },500);
+  document.getElementById('cancel-wait-btn').addEventListener('click',cancelOnlineWait);
 }
 
 function startOnlineGame(gameType,role,opponentName){
+  const myName=currentUser?.name||'Du';
   const opts={
-    diff:'medium',ctrl:'Maus',mode:'Online',
-    onlineRole:role,opponentName,
-    players:[
-      {name:currentUser?.name||'Du',type:'human',color:0},
-      {name:opponentName,type:'human',color:1}
-    ]
+    diff:'medium',
+    ctrl:'Maus',
+    mode:'Online',
+    onlineRole:role,        // 'host' or 'guest'
+    onlineRoomId:onlineRoomId,
+    opponentName:opponentName,
+    // Host = player 1 (left/blue), Guest = player 2 (right/red)
+    players: role==='host'
+      ? [{name:myName,type:'human',color:0},{name:opponentName,type:'online',color:1}]
+      : [{name:opponentName,type:'online',color:1},{name:myName,type:'human',color:0}],
+    playerNames:[myName,opponentName],
+    isOnline:true,
+    isHost:role==='host',
   };
   startGame(gameType,opts);
 }
@@ -1785,6 +1835,32 @@ function initSnake(opts){
 // ════════════════════════════════════════════════
 // PONG
 // ════════════════════════════════════════════════
+
+  // ── Online sync ──────────────────────────────
+  if(opts.isOnline&&opts.onlineRoomId){
+    const roomPath='rooms/'+opts.onlineRoomId;
+    const myKey=opts.isHost?'p1y':'p2y';
+    const oppKey=opts.isHost?'p2y':'p1y';
+    // Write my paddle pos + ball pos (host only) every 80ms
+    _safeInterval(async()=>{
+      if(paused||over)return;
+      const update={[myKey]:opts.isHost?p1y:p2y};
+      if(opts.isHost){update.bx=ball.x;update.by=ball.y;update.bvx=bvx;update.bvy=bvy;}
+      await fbUpdate(roomPath+'/sync',update);
+      // Read opponent data
+      const sync=await fbGet(roomPath+'/sync');
+      if(!sync)return;
+      // Update opponent paddle
+      if(sync[oppKey]!==undefined){
+        if(opts.isHost)p2y=Math.max(0,Math.min(H-PH,sync[oppKey]));
+        else p1y=Math.max(0,Math.min(H-PH,sync[oppKey]));
+      }
+      // Guest receives ball from host
+      if(!opts.isHost&&sync.bx!==undefined){
+        ball.x=sync.bx;ball.y=sync.by;bvx=sync.bvx;bvy=sync.bvy;
+      }
+    },80);
+  }
 function initPong(opts){
   const C=document.getElementById('gc');
   // Fill the container
@@ -2169,6 +2245,7 @@ function initVier(opts){
   }
 
   function doAI(){
+    if(opts.isOnline)return; // No AI in online mode
     if(over||!currentGame)return;
     const col=bestMove();
     drop(board,col,2);sndPlace();
@@ -2181,22 +2258,35 @@ function initVier(opts){
   }
 
   function onClick(e){
-    if(over||turn!==1)return;
+    if(over)return;
+    // Online: host=player1(turn1), guest=player2(turn2)
+    const myTurn=opts.isOnline?(opts.isHost?1:2):1;
+    if(turn!==myTurn)return;
     const rect=C.getBoundingClientRect();
     const mx=(e.clientX-rect.left);
     let col=-1;
     for(let c=0;c<COLS;c++)if(Math.abs(mx-cx(c))<=R+GAP/2){col=c;break;}
     if(col<0||landRow(col)<0)return;
-    drop(board,col,1);sndPlace();
+    drop(board,col,myTurn);sndPlace();
     const w=checkWin(board);
     if(w){
-      wins1++;document.getElementById('s1').textContent=wins1;over=true;
-      draw(w.line);showEndScreen(true);
-      document.getElementById('g-status').textContent='Du gewinnst! 🎉 Neustart drücken.';sndWin();
+      const iWon=true;
+      if(iWon)wins1++;else wins2++;
+      document.getElementById(iWon?'s1':'s2').textContent=iWon?wins1:wins2;
+      over=true;draw(w.line);showEndScreen(iWon);
+      document.getElementById('g-status').textContent=(iWon?'Du gewinnst! 🎉':'Gegner gewinnt!')+' Neustart drücken.';
+      if(iWon)sndWin();else sndFail();
       return;
     }
-    turn=2;draw();
-    setTimeout(doAI,380);
+    turn=turn===1?2:1;draw();
+    // In online mode: write move to Firebase
+    if(opts.isOnline&&opts.onlineRoomId){
+      fbUpdate('rooms/'+opts.onlineRoomId+'/sync',{
+        move:{col,from:fbUser?.uid,turn:myTurn,applied:false,ts:Date.now()}
+      });
+    } else {
+      setTimeout(doAI,380);
+    }
   }
 
   function onMove(e){
