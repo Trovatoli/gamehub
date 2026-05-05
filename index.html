@@ -767,82 +767,133 @@ function initFirebase(){
 
 
 // ── ONLINE LOBBY ─────────────────────────────────
-let onlineRoomId=null,onlineRoomRef=null,onlineGameType=null,onlineRole=null;
+let onlineRoomId=null,onlineGameType=null,onlineRole=null,onlinePollTimer=null;
 
-function createOnlineRoom(gameType){
-  if(!fbUser){showToast('Bitte zuerst einloggen!');return;}
+async function createOnlineRoom(gameType){
+  if(!fbUser||!fbToken){showToast('Bitte zuerst einloggen!');return;}
   const roomId=Math.random().toString(36).substr(2,6).toUpperCase();
   onlineRoomId=roomId;
   onlineGameType=gameType;
   onlineRole='host';
-  const ref=fbDb.ref('rooms/'+roomId);
-  onlineRoomRef=ref;
-  ref.set({
+
+  // Save room to Firebase REST
+  const ok=await fbSet('rooms/'+roomId,{
     game:gameType,
     host:{uid:fbUser.uid,name:currentUser.name},
     guest:null,
     state:'waiting',
-    moves:[],
     created:Date.now()
   });
-  // Auto-delete room after 30min
-  ref.onDisconnect().remove();
+
+  if(!ok){showToast('Fehler beim Erstellen des Raums');return;}
   showOnlineWaiting(roomId,gameType);
+
+  // Poll for guest joining every 2 seconds
+  onlinePollTimer=setInterval(async()=>{
+    const room=await fbGet('rooms/'+roomId);
+    if(!room){clearInterval(onlinePollTimer);return;}
+    if(room.guest&&room.state==='playing'){
+      clearInterval(onlinePollTimer);
+      const el=document.getElementById('online-waiting');
+      if(el)el.remove();
+      showToast('🎮 '+room.guest.name+' ist beigetreten!');
+      setTimeout(()=>startOnlineGame(gameType,'host',room.guest.name),1000);
+    }
+  },2000);
 }
 
-function joinOnlineRoom(roomId){
-  if(!fbUser){showToast('Bitte zuerst einloggen!');return;}
-  const ref=fbDb.ref('rooms/'+roomId.toUpperCase());
-  ref.once('value').then(snap=>{
-    const room=snap.val();
-    if(!room){showToast('Raum nicht gefunden!');return;}
-    if(room.guest){showToast('Raum ist voll!');return;}
-    onlineRoomId=roomId.toUpperCase();
-    onlineGameType=room.game;
-    onlineRole='guest';
-    onlineRoomRef=ref;
-    ref.update({guest:{uid:fbUser.uid,name:currentUser.name},state:'playing'});
-    startOnlineGame(room.game,'guest',room.host.name);
+async function joinOnlineRoom(code){
+  if(!fbUser||!fbToken){showToast('Bitte zuerst einloggen!');return;}
+  if(!code||code.length<4){showToast('Bitte einen gültigen Code eingeben');return;}
+  const roomId=code.trim().toUpperCase();
+  const room=await fbGet('rooms/'+roomId);
+  if(!room){showToast('❌ Raum "'+roomId+'" nicht gefunden');return;}
+  if(room.state!=='waiting'){showToast('❌ Raum ist bereits voll');return;}
+
+  // Join the room
+  await fbUpdate('rooms/'+roomId,{
+    guest:{uid:fbUser.uid,name:currentUser.name},
+    state:'playing'
   });
+  onlineRoomId=roomId;
+  onlineGameType=room.game;
+  onlineRole='guest';
+  showToast('✅ Raum beigetreten!');
+  setTimeout(()=>startOnlineGame(room.game,'guest',room.host.name),1000);
+}
+
+function cancelOnlineWait(){
+  if(onlinePollTimer){clearInterval(onlinePollTimer);onlinePollTimer=null;}
+  if(onlineRoomId)fbDelete('rooms/'+onlineRoomId);
+  const el=document.getElementById('online-waiting');
+  if(el)el.remove();
+  onlineRoomId=null;
 }
 
 function showOnlineWaiting(roomId,gameType){
   const el=document.createElement('div');
   el.id='online-waiting';
-  el.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.9)';
-  const link=location.href.split('?')[0]+'?join='+roomId;
-  el.innerHTML='<div style="background:#0d0d18;border:1px solid #1e1e38;border-radius:16px;padding:32px;text-align:center;max-width:380px">'
-    +'<div style="font-size:32px;margin-bottom:12px">🌐</div>'
-    +'<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:8px">Warte auf Mitspieler...</div>'
-    +'<div style="font-size:13px;color:#6060a0;margin-bottom:20px">Teile diesen Code:</div>'
-    +'<div style="font-size:36px;font-weight:900;color:#00f5ff;letter-spacing:6px;margin-bottom:20px">'+roomId+'</div>'
-    +'<div style="font-size:11px;color:#3a3a5a;margin-bottom:20px">Oder teile den Link:<br><span style="color:#00f5ff;word-break:break-all">'+link+'</span></div>'
-    +'<button onclick="cancelOnlineWait()" style="padding:10px 24px;background:transparent;border:1px solid #1e1e38;color:#6060a0;border-radius:8px;cursor:pointer;font-family:inherit">Abbrechen</button>'
-    +'</div>';
+  el.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.92)';
+  el.innerHTML=
+    '<div style="background:#0d0d18;border:1px solid #1e1e38;border-radius:16px;padding:32px;text-align:center;max-width:400px;width:90%">'+
+    '<div style="font-size:36px;margin-bottom:12px">🌐</div>'+
+    '<div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px">Warte auf Mitspieler...</div>'+
+    '<div style="font-size:12px;color:#6060a0;margin-bottom:20px">Teile diesen Code mit deinem Freund:</div>'+
+    '<div style="font-size:48px;font-weight:900;color:#00f5ff;letter-spacing:8px;margin-bottom:8px;font-family:monospace">'+roomId+'</div>'+
+    '<div style="font-size:11px;color:#3a3a5a;margin-bottom:4px">oder teile den Link:</div>'+
+    '<div id="share-link" style="font-size:11px;color:#00f5ff;word-break:break-all;margin-bottom:24px;padding:8px;background:#111;border-radius:6px;cursor:pointer">'+
+    location.href.split('?')[0]+'?join='+roomId+
+    '</div>'+
+    '<div style="font-size:12px;color:#4a4a6a;margin-bottom:20px" id="waiting-dots">Warte<span id="dots">...</span></div>'+
+    '<button onclick="cancelOnlineWait()" style="padding:10px 24px;background:transparent;border:1px solid #1e1e38;color:#6060a0;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px">Abbrechen</button>'+
+    '</div>';
   document.body.appendChild(el);
-  onlineRoomRef.child('guest').on('value',snap=>{
-    if(snap&&snap.val()){
-      el.remove();
-      onlineRoomRef.child('guest').off();
-      startOnlineGame(onlineGameType,'host',snap.val().name);
-    }
+  // Copy link on click
+  const shareLink=document.getElementById('share-link');
+  if(shareLink)shareLink.addEventListener('click',()=>{
+    try{navigator.clipboard.writeText(shareLink.textContent).then(()=>showToast('Link kopiert! 📋'));}catch(e){}
   });
-}
-function cancelOnlineWait(){
-  if(onlineRoomRef)onlineRoomRef.remove();
-  const el=document.getElementById('online-waiting');
-  if(el)el.remove();
-  onlineRoomRef=null;onlineRoomId=null;
+
+  // Animate dots
+  let d=0;
+  const dotsEl=document.getElementById('dots');
+  const dotsAnim=setInterval(()=>{
+    if(!document.getElementById('online-waiting')){clearInterval(dotsAnim);return;}
+    d=(d+1)%4;
+    if(dotsEl)dotsEl.textContent='.'.repeat(d+1);
+  },500);
 }
 
 function startOnlineGame(gameType,role,opponentName){
-  showToast((role==='host'?'Gast':'Host')+' verbunden! Spiel startet...');
-  setTimeout(()=>{
-    const opts={diff:'medium',ctrl:'Maus',mode:'Online',
-      onlineRole:role,onlineRef:onlineRoomRef,opponentName};
-    startGame(gameType,opts);
-  },1000);
+  const opts={
+    diff:'medium',ctrl:'Maus',mode:'Online',
+    onlineRole:role,opponentName,
+    players:[
+      {name:currentUser?.name||'Du',type:'human',color:0},
+      {name:opponentName,type:'human',color:1}
+    ]
+  };
+  startGame(gameType,opts);
 }
+
+// Check URL for auto-join on load
+(()=>{
+  try{
+    const params=new URLSearchParams(location.search);
+    const joinCode=params.get('join');
+    if(joinCode){
+      setTimeout(()=>{
+        if(fbUser){
+          joinOnlineRoom(joinCode);
+        }else{
+          showToast('Bitte einloggen um dem Raum beizutreten');
+          // Store code and join after login
+          sessionStorage.setItem('pendingJoin',joinCode);
+        }
+      },2000);
+    }
+  }catch(e){}
+})();
 
 function showToast(msg,dur=3000){
   const t=document.createElement('div');
