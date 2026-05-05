@@ -1837,30 +1837,6 @@ function initSnake(opts){
 // ════════════════════════════════════════════════
 
   // ── Online sync ──────────────────────────────
-  if(opts.isOnline&&opts.onlineRoomId){
-    const roomPath='rooms/'+opts.onlineRoomId;
-    const myKey=opts.isHost?'p1y':'p2y';
-    const oppKey=opts.isHost?'p2y':'p1y';
-    // Write my paddle pos + ball pos (host only) every 80ms
-    _safeInterval(async()=>{
-      if(paused||over)return;
-      const update={[myKey]:opts.isHost?p1y:p2y};
-      if(opts.isHost){update.bx=ball.x;update.by=ball.y;update.bvx=bvx;update.bvy=bvy;}
-      await fbUpdate(roomPath+'/sync',update);
-      // Read opponent data
-      const sync=await fbGet(roomPath+'/sync');
-      if(!sync)return;
-      // Update opponent paddle
-      if(sync[oppKey]!==undefined){
-        if(opts.isHost)p2y=Math.max(0,Math.min(H-PH,sync[oppKey]));
-        else p1y=Math.max(0,Math.min(H-PH,sync[oppKey]));
-      }
-      // Guest receives ball from host
-      if(!opts.isHost&&sync.bx!==undefined){
-        ball.x=sync.bx;ball.y=sync.by;bvx=sync.bvx;bvy=sync.bvy;
-      }
-    },80);
-  }
 function initPong(opts){
   const C=document.getElementById('gc');
   // Fill the container
@@ -2062,6 +2038,33 @@ function initPong(opts){
     document.removeEventListener('keyup',   onKeyUp);
     C.removeEventListener('mousemove', onMouse);
   };
+
+  // ── Online multiplayer sync ───────────────────
+  if(opts.isOnline && opts.onlineRoomId){
+    const roomPath='rooms/'+opts.onlineRoomId+'/sync';
+    const isHost=opts.isHost;
+    // Write my paddle + ball every 80ms, read opponent
+    _safeInterval(async()=>{
+      if(paused||over)return;
+      // Host controls ball, both write their paddle
+      const update=isHost
+        ?{p1y:p1y,bx:ball.x,by:ball.y,bvx:bvx,bvy:bvy,s1:s1,s2:s2}
+        :{p2y:p2y};
+      await fbUpdate(roomPath,update);
+      const sync=await fbGet(roomPath);
+      if(!sync)return;
+      if(isHost){
+        // Host reads guest paddle
+        if(sync.p2y!==undefined)p2y=Math.max(0,Math.min(H-PH,sync.p2y));
+      } else {
+        // Guest reads host paddle + ball
+        if(sync.p1y!==undefined)p1y=Math.max(0,Math.min(H-PH,sync.p1y));
+        if(sync.bx!==undefined){ball.x=sync.bx;ball.y=sync.by;bvx=sync.bvx;bvy=sync.bvy;}
+        if(sync.s1!==undefined){s1=sync.s1;s2=sync.s2;document.getElementById('s1').textContent=s1;document.getElementById('s2').textContent=s2;}
+      }
+    },80);
+    // Also skip AI for online
+  }
 
   draw();
 }
