@@ -698,14 +698,16 @@ function fbErrMsg(code){
 async function fbGet(path){
   const auth=fbToken?'?auth='+fbToken:'';
   try{
-    let r=await fetch(FB_DB_URL+'/'+path+'.json'+auth);
-    // If auth fails, try without token (for public paths like rooms)
-    if(!r.ok&&fbToken){r=await fetch(FB_DB_URL+'/'+path+'.json');}
+    const url=FB_DB_URL+'/'+path+'.json'+auth;
+    let r=await fetch(url);
+    if(!r.ok&&fbToken){
+      console.warn('fbGet auth failed, trying without auth:',path,r.status);
+      r=await fetch(FB_DB_URL+'/'+path+'.json');
+    }
     if(!r.ok){console.error('fbGet error:',path,r.status);return null;}
     const data=await r.json();
-    // Firebase returns null for missing paths
     return data;
-  }catch(e){console.error('fbGet network error:',e);return null;}
+  }catch(e){console.error('fbGet network error:',path,e);return null;}
 }
 
 async function fbSet(path,data){
@@ -818,9 +820,11 @@ async function joinOnlineRoom(code){
   if(!code||code.length<4){showToast('Bitte einen gültigen Code eingeben');return;}
   showToast('Suche Raum...');
   const roomId=code.trim().toUpperCase();
+  console.log('Fetching room:',roomId,'from',FB_DB_URL+'/rooms/'+roomId+'.json');
   const room=await fbGet('rooms/'+roomId);
-  if(!room){showToast('❌ Raum "'+roomId+'" nicht gefunden');return;}
-  if(room.state!=='waiting'){showToast('❌ Raum ist bereits voll');return;}
+  console.log('Room data:',JSON.stringify(room));
+  if(!room){showToast('❌ Raum "'+roomId+'" nicht gefunden - prüfe den Code');return;}
+  if(room.state!=='waiting'){showToast('❌ Raum ist bereits voll (state: '+room.state+')');return;}
 
   // Join the room
   await fbUpdate('rooms/'+roomId,{
