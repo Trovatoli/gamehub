@@ -709,6 +709,7 @@ async function fbGet(path){
 }
 
 async function fbSet(path,data){
+  console.log('fbSet',path,JSON.stringify(data).slice(0,50));
   const auth=fbToken?'?auth='+fbToken:'';
   try{
     const r=await fetch(FB_DB_URL+'/'+path+'.json'+auth,{
@@ -777,6 +778,7 @@ function initFirebase(){
 let onlineRoomId=null,onlineGameType=null,onlineRole=null,onlinePollTimer=null;
 
 async function createOnlineRoom(gameType){
+  console.log('createOnlineRoom',gameType,'fbUser:',!!fbUser,'fbToken:',!!fbToken);
   if(!fbUser||!fbToken){showToast('Bitte zuerst einloggen!');return;}
   showToast('Erstelle Raum...');
   const roomId=Math.random().toString(36).substr(2,6).toUpperCase();
@@ -811,6 +813,7 @@ async function createOnlineRoom(gameType){
 }
 
 async function joinOnlineRoom(code){
+  console.log('joinOnlineRoom',code,'fbUser:',!!fbUser,'fbToken:',!!fbToken);
   if(!fbUser||!fbToken){showToast('Bitte zuerst einloggen! (? Icon oben rechts)');return;}
   if(!code||code.length<4){showToast('Bitte einen gültigen Code eingeben');return;}
   showToast('Suche Raum...');
@@ -1968,9 +1971,7 @@ function initPong(opts){
     }
 
     // ── move AI paddle ──
-    const aiMid = p2y + PH/2;
-    if(aiMid < by-5) p2y = Math.min(H-PH, p2y+AI_SPD);
-    else if(aiMid > by+5) p2y = Math.max(0, p2y-AI_SPD);
+    if(!opts.isOnline){const aiMid=p2y+PH/2;if(aiMid<by-5)p2y=Math.min(H-PH,p2y+AI_SPD);else if(aiMid>by+5)p2y=Math.max(0,p2y-AI_SPD);}
 
     // ── wait countdown ──
     if(wait>0){
