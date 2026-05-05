@@ -2044,27 +2044,37 @@ function initPong(opts){
   if(opts.isOnline && opts.onlineRoomId){
     const roomPath='rooms/'+opts.onlineRoomId+'/sync';
     const isHost=opts.isHost;
-    _safeInterval(async()=>{
-      if(paused||over)return;
-      // Host writes ball + own paddle; Guest writes own paddle
-      const update=isHost
-        ?{p1y:p1y,bx:bx,by:by,bvx:bvx,bvy:bvy,s1:s1,s2:s2}
-        :{p2y:p2y};
-      await fbUpdate(roomPath,update);
-      const sync=await fbGet(roomPath);
-      if(!sync)return;
-      if(isHost){
-        if(sync.p2y!==undefined)p2y=Math.max(0,Math.min(H-PH,sync.p2y));
-      } else {
-        if(sync.p1y!==undefined)p1y=Math.max(0,Math.min(H-PH,sync.p1y));
+
+    if(isHost){
+      // HOST: writes full game state every 50ms, reads guest mouse
+      _safeInterval(async()=>{
+        if(paused||over)return;
+        // Write everything
+        fbUpdate(roomPath,{bx,by,bvx,bvy,p1y,p2y,s1,s2,ts:Date.now()});
+        // Read guest paddle input
+        const sync=await fbGet(roomPath+'/guest');
+        if(sync&&sync.p2y!==undefined)
+          p2y=Math.max(0,Math.min(H-PH,sync.p2y));
+      },50);
+    } else {
+      // GUEST: only sends mouse position, reads full state from host
+      _safeInterval(async()=>{
+        if(paused||over)return;
+        // Send my paddle position
+        fbUpdate(roomPath+'/guest',{p2y});
+        // Read full game state from host
+        const sync=await fbGet(roomPath);
+        if(!sync)return;
         if(sync.bx!==undefined){bx=sync.bx;by=sync.by;bvx=sync.bvx;bvy=sync.bvy;}
-        if(sync.s1!==undefined){
+        if(sync.p1y!==undefined)p1y=sync.p1y;
+        if(sync.p2y!==undefined)p2y=sync.p2y;
+        if(sync.s1!==undefined&&(sync.s1!==s1||sync.s2!==s2)){
           s1=sync.s1;s2=sync.s2;
           document.getElementById('s1').textContent=s1;
           document.getElementById('s2').textContent=s2;
         }
-      }
-    },80);
+      },50);
+    }
   }
 
   draw();
