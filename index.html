@@ -615,7 +615,7 @@ nav::-webkit-scrollbar{width:0}
 // ════════════════════════════════════════════════
 // FIREBASE - REST API (no SDK needed)
 // ════════════════════════════════════════════════
-const FB_API_KEY = "";
+const FB_API_KEY = "AIzaSyBnTcGqpq9a7TrRpG3zT0wbScZqkG0N8EU";
 const FB_DB_URL  = "https://gamehub-f827e-default-rtdb.europe-west1.firebasedatabase.app";
 const FB_AUTH_URL= "https://identitytoolkit.googleapis.com/v1/accounts";
 
@@ -725,14 +725,17 @@ async function fbSet(path,data){
 
 async function fbUpdate(path,data){
   const auth=fbToken?'?auth='+fbToken:'';
+  console.log('fbUpdate',path,JSON.stringify(data).slice(0,80));
   try{
-    const r=await fetch(FB_DB_URL+'/'+path+'.json'+auth,{
+    const url=FB_DB_URL+'/'+path+'.json'+auth;
+    const r=await fetch(url,{
       method:'PATCH',headers:{'Content-Type':'application/json'},
       body:JSON.stringify(data)
     });
-    if(!r.ok){const err=await r.json();console.error('fbUpdate error:',path,err);return false;}
+    if(!r.ok){const err=await r.json();console.error('fbUpdate error:',path,r.status,err);return false;}
+    console.log('fbUpdate success:',path);
     return true;
-  }catch(e){console.error('fbUpdate network error:',e);return false;}
+  }catch(e){console.error('fbUpdate network error:',path,e);return false;}
 }
 
 async function fbDelete(path){
@@ -827,14 +830,17 @@ async function joinOnlineRoom(code){
   if(room.state!=='waiting'){showToast('❌ Raum ist bereits voll (state: '+room.state+')');return;}
 
   // Join the room
-  await fbUpdate('rooms/'+roomId,{
+  console.log('Joining room, updating state to playing...');
+  const joinOk=await fbUpdate('rooms/'+roomId,{
     guest:{uid:fbUser.uid,name:currentUser.name},
     state:'playing'
   });
+  console.log('Join update result:',joinOk);
+  if(!joinOk){showToast('❌ Fehler beim Beitreten - Verbindungsproblem');return;}
   onlineRoomId=roomId;
   onlineGameType=room.game;
   onlineRole='guest';
-  showToast('✅ Raum beigetreten!');
+  showToast('✅ Verbunden mit '+room.host.name+'!');
   setTimeout(()=>startOnlineGame(room.game,'guest',room.host.name),1000);
 }
 
