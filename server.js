@@ -52,6 +52,8 @@ try { WebSocket = require('ws'); } catch(e) { console.log('ws not installed'); }
 // uid -> ws connection
 const onlineUsers = new Map(); // uid -> {ws, name, uid}
 const wsRooms = new Map();     // roomId -> {host, guest, state}
+const snakeGames = new Map();
+const pongGames = new Map();
 
 if(WebSocket) {
   const wss = new WebSocket.Server({ server });
@@ -68,6 +70,26 @@ if(WebSocket) {
         const msg = JSON.parse(raw);
 
         // ── AUTH: user comes online ──
+        if(msg.type === 'ping') {
+          send(ws,{type:'pong',ts:msg.ts});
+        }
+
+        if(msg.type === 'igchat') {
+          // Forward to players in same room
+          const roomId=msg.roomId||'';
+          const data2=loadData();
+          const room=roomId?data2.rooms[roomId]:null;
+          // Get UIDs of players in this room
+          const roomUids=room?[room.host?.uid,room.guest?.uid].filter(Boolean):[];
+          wss.clients.forEach(c=>{
+            if(c.readyState===WebSocket.OPEN&&c.uid!==ws.uid){
+              // Send to players in same room OR if no roomId, all online friends
+              const inRoom=roomUids.length?roomUids.includes(c.uid):true;
+              if(inRoom) send(c,{...msg,uid:ws.uid});
+            }
+          });
+        }
+
         if(msg.type === 'game_status') {
           ws.currentGame=msg.game||'';
           // Update onlineUsers entry
@@ -80,7 +102,7 @@ if(WebSocket) {
           });
         }
 
-        if(msg.type === 'avatar_update') {
+       if(msg.type === 'avatar_update') {
   const data = loadData();
   const user2 = data.users
     ? Object.values(data.users).find(u => u.uid === ws.uid)
@@ -92,10 +114,9 @@ if(WebSocket) {
   }
 
   ws.avatar = msg.avatar || '';
-
   wss.clients.forEach(c => {
     if(c.readyState === WebSocket.OPEN && c.uid !== ws.uid) {
-      send(c, { type:'avatar_update', uid:ws.uid, avatar:ws.avatar });
+      send(c,{ type:'avatar_update', uid:ws.uid, avatar:ws.avatar });
     }
   });
 }
@@ -223,12 +244,38 @@ if(WebSocket) {
         }
 
         // ── GAME SYNC ──
+        if(msg.type === 'snakeDir') {
+          const game=snakeGames.get(ws.roomId);
+          if(game){
+            const pid=ws.role==='host'?'p1':'p2';
+            const d=msg.dir;
+            const cur=game.state[pid].dir;
+            // Prevent reversing
+            if(!(d.x===-cur.x&&d.y===-cur.y))game.state[pid].dir=d;
+          }
+        }
+
         if(msg.type === 'battle_shot' || msg.type === 'battle_result' || msg.type === 'battle_rematch') {
           // Forward to the other player in the same room
           const room = wsRooms.get(ws.roomId);
           if(!room) return;
           const other = ws.role==='host'?room.guest:room.host;
           if(other&&other.readyState===WebSocket.OPEN) other.send(JSON.stringify(msg));
+        }
+
+        if(msg.type === 'paddleSync') {
+          // Update server-side pong state
+          const game=pongGames.get(ws.roomId);
+          if(game){
+            if(msg.p1y!==undefined)game.state.p1y=msg.p1y*game.state.H;
+            if(msg.p2y!==undefined)game.state.p2y=msg.p2y*game.state.H;
+          }
+          // Also relay for client prediction
+          const room=wsRooms.get(ws.roomId);
+          if(room){
+            const other=ws.role==='host'?room.guest:room.host;
+            if(other&&other.readyState===WebSocket.OPEN)other.send(JSON.stringify(msg));
+          }
         }
 
         if(msg.type === 'sync') {
@@ -394,6 +441,15 @@ function handleAPI(pathname, method, body, req, res) {
       bestGame:Object.entries(u.scores||{}).sort((a,b)=>b[1]-a[1])[0]
     })).sort((a,b)=>b.total-a.total).slice(0,20);
     return sendJSON(200,{leaderboard:allUsers,online:[...onlineUsers.values()].map(u=>u.uid)});
+  }
+
+  if(pathname==='/api/leaderboard/snakeclassic'&&method==='GET'){
+    const lb=Object.values(data.users)
+      .filter(u=>u.scores&&u.scores.snakeclassic)
+      .map(u=>({name:u.name,uid:u.uid,avatar:u.avatar||'',score:u.scores.snakeclassic}))
+      .sort((a,b)=>b.score-a.score)
+      .slice(0,10);
+    return sendJSON(200,{leaderboard:lb});
   }
 
   if(pathname==='/api/change-password'&&method==='POST'){
