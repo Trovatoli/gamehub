@@ -81,15 +81,24 @@ if(WebSocket) {
         }
 
         if(msg.type === 'avatar_update') {
-          // Broadcast avatar change to friends
-          const user2=data.users?Object.values(data.users).find(u=>u.uid===ws.uid):null;
-          if(user2){user2.avatar=msg.avatar||'';saveData(data);}
-          ws.avatar=msg.avatar||'';
-          wss.clients.forEach(c=>{
-            if(c.readyState===WebSocket.OPEN&&c.uid!==ws.uid)
-              send(c,{type:'avatar_update',uid:ws.uid,avatar:ws.avatar});
-          });
-        }
+  const data = loadData();
+  const user2 = data.users
+    ? Object.values(data.users).find(u => u.uid === ws.uid)
+    : null;
+
+  if(user2) {
+    user2.avatar = msg.avatar || '';
+    saveData(data);
+  }
+
+  ws.avatar = msg.avatar || '';
+
+  wss.clients.forEach(c => {
+    if(c.readyState === WebSocket.OPEN && c.uid !== ws.uid) {
+      send(c, { type:'avatar_update', uid:ws.uid, avatar:ws.avatar });
+    }
+  });
+}
 
         if(msg.type === 'auth') {
           const data = loadData();
@@ -429,9 +438,10 @@ function handleAPI(pathname, method, body, req, res) {
   }
 
   // Search users
-  if(pathname==='/api/users/search'&&method==='GET'){
-    const user=getUser();
-    const q=(url.searchParams?.get('q')||'').toLowerCase().trim();
+  if(pathname === '/api/users/search' && method === 'GET'){
+  const user = getUser();
+  const requestUrl = new URL(req.url, `http://${req.headers.host}`);
+  const q = (requestUrl.searchParams.get('q') || '').toLowerCase().trim();
     if(!q||q.length<2) return sendJSON(200,{results:[]});
     const me=user?.uid;
     const myData=user;
