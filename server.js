@@ -17,7 +17,8 @@ function generateToken() { return crypto.randomBytes(32).toString('hex'); }
 
 // ── HTTP Server ───────────────────────────────────
 const server = http.createServer((req,res) => {
-  res.setHeader('Access-Control-Allow-Origin','*');
+ const allowedOrigin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers','Content-Type,Authorization');
   if(req.method==='OPTIONS'){res.writeHead(200);res.end();return;}
@@ -54,6 +55,92 @@ const onlineUsers = new Map(); // uid -> {ws, name, uid}
 const wsRooms = new Map();     // roomId -> {host, guest, state}
 const snakeGames = new Map();
 const pongGames = new Map();
+
+// ── SERVER-SIDE SNAKE LOOP ────────────────────────────────────
+function startSnakeServer(roomId) {
+  if (snakeGames.has(roomId)) return;
+  const COLS=27, ROWS=22, TICK=100; // 150ms = matches client expectations logic
+
+  const state = {
+    p1: { snake:[{x:7,y:11},{x:6,y:11},{x:5,y:11}], dir:{x:1,y:0}, nextDir:{x:1,y:0}, score:0, dead:false },
+    p2: { snake:[{x:19,y:11},{x:20,y:11},{x:21,y:11}], dir:{x:-1,y:0}, nextDir:{x:-1,y:0}, score:0, dead:false },
+    food: randomSnakeFood([]),
+    over: false, tick: 0
+  };
+
+  function randomSnakeFood(snakes) {
+    let f, tries=0;
+    do {
+      f = { x: Math.floor(Math.random()*COLS), y: Math.floor(Math.random()*ROWS) };
+      tries++;
+    } while (tries<200 && snakes.some(s=>s&&s.some(seg=>seg&&seg.x===f.x&&seg.y===f.y)));
+    return f;
+  }
+
+  function tick() {
+    const room = wsRooms.get(roomId);
+    if (!room || state.over) { clearInterval(loop); snakeGames.delete(roomId); return; }
+    if (!room.host || !room.guest) return; // wait for both
+
+    state.tick++;
+
+    ['p1','p2'].forEach(pid => {
+      const p = state[pid];
+      if (p.dead) return;
+
+      // Apply buffered direction
+      p.dir = p.nextDir;
+
+      const head = { x: p.snake[0].x + p.dir.x, y: p.snake[0].y + p.dir.y };
+
+      // Wrap-around (no walls)
+      head.x = (head.x + COLS) % COLS;
+      head.y = (head.y + ROWS) % ROWS;
+      // Self collision
+      if (p.snake.some(seg => seg.x === head.x && seg.y === head.y)) {
+        p.dead = true; return;
+      }
+
+      p.snake.unshift(head);
+
+      // Food
+      if (head.x === state.food.x && head.y === state.food.y) {
+        p.score += 10;
+        state.food = randomSnakeFood([state.p1.snake, state.p2.snake]);
+      } else {
+        p.snake.pop();
+      }
+    });
+
+    // Cross-collision (head into other snake)
+    if (!state.p1.dead && !state.p2.dead) {
+      const h1=state.p1.snake[0], h2=state.p2.snake[0];
+      const p1HitsP2 = state.p2.snake.some(s=>s.x===h1.x&&s.y===h1.y);
+      const p2HitsP1 = state.p1.snake.some(s=>s.x===h2.x&&s.y===h2.y);
+      if (p1HitsP2) state.p1.dead = true;
+      if (p2HitsP1) state.p2.dead = true;
+    }
+
+    if (state.p1.dead || state.p2.dead) state.over = true;
+
+    // Broadcast — send only 10 head segments to reduce bandwidth
+    const msg = JSON.stringify({
+      type: 'snakeState',
+      p1: { snake: state.p1.snake.slice(0,20), score: state.p1.score, dead: state.p1.dead, len: state.p1.snake.length },
+      p2: { snake: state.p2.snake.slice(0,20), score: state.p2.score, dead: state.p2.dead, len: state.p2.snake.length },
+      food: state.food, over: state.over, tick: state.tick
+    });
+
+    if (room.host?.readyState===1)  room.host.send(msg);
+    if (room.guest?.readyState===1) room.guest.send(msg);
+
+    if (state.over) { clearInterval(loop); snakeGames.delete(roomId); }
+  }
+
+  const loop = setInterval(tick, TICK);
+  snakeGames.set(roomId, { state, loop });
+  console.log('Snake server started for room', roomId);
+}
 
 if(WebSocket) {
   const wss = new WebSocket.Server({ server });
@@ -236,9 +323,22 @@ if(WebSocket) {
           if(!wsRooms.has(roomId)) wsRooms.set(roomId,{host:null,guest:null,state:{},spectators:[]});
           const room = wsRooms.get(roomId);
           room[role] = ws;
+          // Cache game type from DB into wsRooms for quick access
+          if(!room.gameType){
+            try{const d=loadData();room.gameType=(d.rooms&&d.rooms[roomId]&&d.rooms[roomId].game)||'';}catch(e){}
+          }
           if(room.host && room.guest) {
             send(room.host,{type:'start',opponentName:room.guest.playerName,role:'host'});
             send(room.guest,{type:'start',opponentName:room.host.playerName,role:'guest'});
+            // Detect game type from room data
+            try{
+              const data3=loadData();
+              const gameRoom=data3.rooms&&data3.rooms[roomId];
+              const gameType=(gameRoom&&gameRoom.game)||room.gameType||'';
+              console.log('[WS] Both joined room',roomId,'game:',gameType);
+              if(gameType==='snake') setTimeout(()=>startSnakeServer(roomId),100);
+              else if(gameType==='pong') setTimeout(()=>startPongServer(roomId),100);
+            }catch(e){console.error('game start error:',e);}
           } else { send(ws,{type:'waiting',roomId}); }
           } // end else spectator
         }
@@ -250,8 +350,10 @@ if(WebSocket) {
             const pid=ws.role==='host'?'p1':'p2';
             const d=msg.dir;
             const cur=game.state[pid].dir;
-            // Prevent reversing
-            if(!(d.x===-cur.x&&d.y===-cur.y))game.state[pid].dir=d;
+            // Buffer next direction, prevent 180° reversal
+            if(!(d.x===-cur.x&&d.y===-cur.y)){
+              game.state[pid].nextDir=d;
+            }
           }
         }
 
@@ -323,8 +425,29 @@ if(WebSocket) {
           room.rematchVotes.add(ws.role);
           if(room.rematchVotes.has('host')&&room.rematchVotes.has('guest')) {
             room.rematchVotes.clear(); room.state={};
+            // Restart game loop for rematch
+            if(snakeGames.has(ws.roomId)){
+              const old=snakeGames.get(ws.roomId);
+              if(old&&old.loop)clearInterval(old.loop);
+              snakeGames.delete(ws.roomId);
+            }
+            if(pongGames.has(ws.roomId)){
+              const old=pongGames.get(ws.roomId);
+              if(old&&old.loop)clearInterval(old.loop);
+              pongGames.delete(ws.roomId);
+            }
             if(room.host) send(room.host,{type:'rematch_go'});
             if(room.guest) send(room.guest,{type:'rematch_go'});
+            // Restart game loop after short delay
+            try{
+              const data2=loadData();
+              const gameRoom=data2.rooms&&data2.rooms[ws.roomId];
+              const gameType=(gameRoom&&gameRoom.game)||room.gameType||'';
+              setTimeout(()=>{
+                if(gameType==='snake') startSnakeServer(ws.roomId);
+                else if(gameType==='pong') startPongServer(ws.roomId);
+              },300);
+            }catch(e){}
           } else {
             const other = ws.role==='host'?room.guest:room.host;
             if(other) send(other,{type:'rematch_request',from:ws.role});
@@ -769,11 +892,13 @@ function handleAPI(pathname, method, body, req, res) {
     const {player}=body;
     room.rematch[player]=true;
     const bothReady=room.rematch.host&&room.rematch.guest;
-    if(!room.rematch.confirmed) room.rematch.confirmed=[];
-    if(bothReady&&!room.rematch.confirmed.includes(player)) room.rematch.confirmed.push(player);
-    if(room.rematch.confirmed.length>=2){ room.rematch={}; room.sync={col:null,uid:null,ts:1}; }
+    if(bothReady){
+      room.rematch={};
+      saveData(data);
+      return sendJSON(200,{bothReady:true});
+    }
     saveData(data);
-    return sendJSON(200,{bothReady});
+    return sendJSON(200,{bothReady:false});
   }
 
   sendJSON(404,{error:'Not found'});
