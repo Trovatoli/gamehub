@@ -17,8 +17,7 @@ function generateToken() { return crypto.randomBytes(32).toString('hex'); }
 
 // ── HTTP Server ───────────────────────────────────
 const server = http.createServer((req,res) => {
- const allowedOrigin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+  res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers','Content-Type,Authorization');
   if(req.method==='OPTIONS'){res.writeHead(200);res.end();return;}
