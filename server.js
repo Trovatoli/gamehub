@@ -1,6 +1,5 @@
 const http = require('http');
 const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
@@ -58,14 +57,7 @@ const pongGames = new Map();
 // ── SERVER-SIDE SNAKE LOOP ────────────────────────────────────
 function startSnakeServer(roomId) {
   if (snakeGames.has(roomId)) return;
-  const COLS=27, ROWS=22, TICK=100; // 150ms = matches client expectations logic
-
-  const state = {
-    p1: { snake:[{x:7,y:11},{x:6,y:11},{x:5,y:11}], dir:{x:1,y:0}, nextDir:{x:1,y:0}, score:0, dead:false },
-    p2: { snake:[{x:19,y:11},{x:20,y:11},{x:21,y:11}], dir:{x:-1,y:0}, nextDir:{x:-1,y:0}, score:0, dead:false },
-    food: randomSnakeFood([]),
-    over: false, tick: 0
-  };
+  const COLS=27, ROWS=22, TICK=100; // 100ms tick = 10 updates/sec
 
   function randomSnakeFood(snakes) {
     let f, tries=0;
@@ -75,6 +67,13 @@ function startSnakeServer(roomId) {
     } while (tries<200 && snakes.some(s=>s&&s.some(seg=>seg&&seg.x===f.x&&seg.y===f.y)));
     return f;
   }
+
+  const state = {
+    p1: { snake:[{x:7,y:11},{x:6,y:11},{x:5,y:11}], dir:{x:1,y:0}, nextDir:{x:1,y:0}, score:0, dead:false },
+    p2: { snake:[{x:19,y:11},{x:20,y:11},{x:21,y:11}], dir:{x:-1,y:0}, nextDir:{x:-1,y:0}, score:0, dead:false },
+    food: randomSnakeFood([]),
+    over: false, tick: 0
+  };
 
   function tick() {
     const room = wsRooms.get(roomId);
@@ -139,6 +138,13 @@ function startSnakeServer(roomId) {
   const loop = setInterval(tick, TICK);
   snakeGames.set(roomId, { state, loop });
   console.log('Snake server started for room', roomId);
+}
+
+// Pong physics run entirely on the host client.
+// The server only relays paddle/sync/bounce messages between players.
+// This stub exists to prevent ReferenceError if the game type is 'pong'.
+function startPongServer(roomId) {
+  console.log('[Pong] client-side relay mode for room', roomId);
 }
 
 if(WebSocket) {
@@ -389,7 +395,7 @@ if(WebSocket) {
           if(other&&other.readyState===WebSocket.OPEN) send(other,{type:'sync',...msg.data});
           room.lastState=msg.data;
           (room.spectators||[]).forEach(sp=>{
-            if(sp&&sp.readyState===WebSocket.OPEN) send(sp,{type:'sync',data:msg.data});
+            if(sp&&sp.readyState===WebSocket.OPEN) send(sp,{type:'sync',...msg.data});
           });
         }
 
@@ -498,7 +504,7 @@ function send(ws, data) {
   if(ws&&ws.readyState===(WebSocket?WebSocket.OPEN:1)) ws.send(JSON.stringify(data));
 }
 
-function broadcastPresence(uid, name, online) {
+function broadcastPresence(uid, name, online, avatar) {
   // Tell all online friends about this user's status
   const data = loadData();
   const user = Object.values(data.users).find(u=>u.uid===uid);
@@ -506,7 +512,7 @@ function broadcastPresence(uid, name, online) {
   const friends = user.friends||[];
   friends.forEach(fid=>{
     const fw = onlineUsers.get(fid)?.ws;
-    if(fw) send(fw,{type:'presence', uid, name, online});
+    if(fw) send(fw,{type:'presence', uid, name, online, avatar:avatar||user.avatar||''});
   });
 }
 
@@ -803,7 +809,7 @@ function handleAPI(pathname, method, body, req, res) {
     if(!room) return sendJSON(404,{error:'Raum nicht gefunden'});
     if(room.state==='started') return sendJSON(400,{error:'Spiel bereits gestartet'});
     if(!room.players) room.players=[room.host];
-    if(room.players.length>=5) return sendJSON(400,{error:'Raum voll (max 5)'});
+    if(room.players.length>=6) return sendJSON(400,{error:'Raum voll (max 6)'});
     if(!room.players.find(p=>p.uid===user.uid)){
       room.players.push({uid:user.uid,name:user.name});
     }
@@ -854,7 +860,7 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,room);
   }
 
-  if(pathname.match(/\/api\/rooms\/\w+\/join/)&&method==='POST'){
+  if(pathname.match(/\/api\/rooms\/\w+\/join$/)&&method==='POST'){
     const user=getUser()||{uid:token||'anon',name:body.guestName||'Spieler 2'};
     const roomId=pathname.split('/')[3];
     const room=data.rooms[roomId];
