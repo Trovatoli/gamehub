@@ -8,23 +8,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>GameHub</title>
   <meta id="gamehub-version" content="1778007528">
-  <link rel="stylesheet" href="main.css?v=1780302879">
-
-<script>
-function toggleChatPanel(el){
-  var panel=document.getElementById('chat-panel-overlay');
-  if(!panel)return;
-  var open=panel.classList.toggle('open');
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
-  if(open&&el)el.classList.add('active');
-  if(open)setTimeout(function(){if(typeof _renderCpoFriends==='function')_renderCpoFriends();},100);
-}
-function closeChatPanel(){
-  var panel=document.getElementById('chat-panel-overlay');
-  if(panel)panel.classList.remove('open');
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
-}
-</script>
+  <link rel="stylesheet" href="main.css?v=1780303127">
 </head>
 <body class="theme-neon">
 
@@ -93,7 +77,7 @@ function closeChatPanel(){
 <div class="nav-item active" onclick="nav('home',this)"><span class="nav-icon">⊞</span>Spiele</div>
 <div class="nav-item" onclick="nav('lobby',this)"><span class="nav-icon">🎮</span>Lobby<span class="nav-badge" id="lobby-badge"></span></div>
 <div class="nav-group">Community</div>
-<div class="nav-item" onclick="toggleChatPanel(this)"><span class="nav-icon">💬</span>Chat</div>
+<div class="nav-item" onclick="navChat(this)"><span class="nav-icon">💬</span>Chat</div>
 <div class="nav-item" onclick="nav('stats',this)"><span class="nav-icon">📊</span>Statistik</div>
 <div class="nav-group">Einstellungen</div>
 <div class="nav-item" onclick="nav('settings',this)"><span class="nav-icon">⚙</span>Einstellungen</div>
@@ -371,13 +355,6 @@ style="width:100%;background:var(--bg3);border:1px solid var(--border);border-ra
 <script src="js/main.js?v=1780297286"></script>
 
 
-
-<!-- Chat Panel Overlay (in-game + always accessible) -->
-<div id="chat-panel-overlay">
-  <div class="cpo-hdr">
-    <span>💬 Chat</span>
-    <button class="cpo-close" onclick="closeChatPanel()">✕</button>
-  </div>
   <div class="cpo-body" id="chat-panel-body">
     <div style="display:flex;flex:1;min-height:0;overflow:hidden;">
       <div style="width:160px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;padding:8px;" id="cpo-friends-list">
