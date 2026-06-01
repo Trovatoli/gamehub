@@ -1,7 +1,21 @@
 function nav(page,el){
 // Toggle: only when in-game, clicking same page closes it and returns to game
+console.log('[TOGGLE] currentGame='+!!currentGame+' _navInGamePage='+window._navInGamePage+' page='+page);
 if(currentGame&&window._navInGamePage===page&&page!=='game'&&page!=='home'){
   window._navInGamePage=null;
+  // Remove overlay panel if it exists
+  const _ol=document.getElementById('nav-overlay');
+  if(_ol){
+    // Restore page back to original parent before removing overlay
+    const _pg=_ol.querySelector('.page');
+    if(_pg&&_pg._origParent){
+      _pg.classList.remove('active');
+      _pg.style.flex='';_pg.style.minHeight='';_pg.style.display='';
+      if(_pg._origNextSibling)_pg._origParent.insertBefore(_pg,_pg._origNextSibling);
+      else _pg._origParent.appendChild(_pg);
+    }
+    _ol.remove();
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   paused=false;
