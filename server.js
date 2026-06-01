@@ -504,11 +504,11 @@ if(WebSocket) {
                 const roomPlayers=data2.rooms[ws.roomId].players||[];
                 const anyOnline=roomPlayers.some(p=>p.uid!==ws.uid&&onlineUsers.has(p.uid));
                 if(!anyOnline){
-                  data2.rooms[ws.roomId].state='closed';
+                  data2.rooms[ws.roomId].state='closed';data2.rooms[ws.roomId].closedAt=Date.now();
                   saveData(data2);
                 }
               } else {
-                data2.rooms[ws.roomId].state='closed';
+                data2.rooms[ws.roomId].state='closed';data2.rooms[ws.roomId].closedAt=Date.now();
                 saveData(data2);
               }
             }
@@ -739,7 +739,7 @@ function handleAPI(pathname, method, body, req, res) {
       const r=data.rooms[id];
       // Keep started games for 2h, closed games cleanup immediately, others 30min
       if(r.state==='started'&&(now-r.created)<7200000) return;
-      if(r.state==='closed') { delete data.rooms[id]; return; }
+      if(r.state==='closed'&&(now-(r.closedAt||r.created||0))>600000) { delete data.rooms[id]; return; }
       if((now-r.created)>1800000) delete data.rooms[id];
     });
     saveData(data);
@@ -926,6 +926,8 @@ function handleAPI(pathname, method, body, req, res) {
     if(bothReady){
       room.rematch={};
       room.state='waiting';
+      room.closedAt=null;
+      room.sync={};  // clear old game moves
       saveData(data);
       return sendJSON(200,{bothReady:true,roomId});
     }
