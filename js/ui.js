@@ -1,6 +1,11 @@
 function nav(page,el){
-// Remove any ingame close button
 document.getElementById('ingame-close-btn')?.remove();
+// If in game and clicking chat → open igchat widget instead of navigating
+const inGame=document.getElementById('page-game')?.classList.contains('active');
+if(inGame&&currentGame&&page==='chat'){
+  toggleIgChat();
+  return;
+}
 // Always stop game when navigating away
 if(page!=='game')stopAll();
 document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
