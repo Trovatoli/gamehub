@@ -40,17 +40,15 @@ if(page==='lobby'){loadLobbies();clearInterval(window._lobbyTimer);window._lobby
 else{clearInterval(window._lobbyTimer);}
 applyTranslations();
 updateBackToGameBtn();
-// Show resume banner when game is paused and user navigated away
-const _existBanner=document.getElementById('resume-game-banner');
-if(_existBanner)_existBanner.remove();
+// If game is paused, add a close button to current page
+document.getElementById('ingame-close-btn')?.remove();
 if(currentGame&&paused&&page!=='game'){
-  const _banner=document.createElement('div');
-  _banner.id='resume-game-banner';
-  _banner.style.cssText='position:sticky;top:0;z-index:500;background:var(--c1,#00f5ff);color:#000;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-weight:700;font-size:13px;flex-shrink:0;';
-  _banner.innerHTML='▶ Spiel läuft noch — <b>Klicken zum Weiterspielen</b> <span style="opacity:.6;font-size:11px">'+t('game.back.short')+'</span>';
-  _banner.onclick=()=>nav('game');
-  const _mainContent=document.getElementById('page-'+page);
-  if(_mainContent)_mainContent.insertBefore(_banner,_mainContent.firstChild);
+  const btn=document.createElement('button');
+  btn.id='ingame-close-btn';
+  btn.textContent='✕ Zurück zum Spiel';
+  btn.style.cssText='position:fixed;top:12px;right:12px;z-index:9999;background:var(--c1,#00f5ff);color:#000;border:none;padding:8px 18px;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(0,0,0,.4);';
+  btn.onclick=()=>nav('game');
+  document.body.appendChild(btn);
 }
 }
 
