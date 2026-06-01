@@ -911,16 +911,23 @@ function handleAPI(pathname, method, body, req, res) {
 
   if(pathname.match(/\/api\/rooms\/\w+\/rematch/)&&method==='POST'){
     const roomId=pathname.split('/')[3];
+    // Room might be deleted after game end — recreate from WS memory if needed
+    if(!data.rooms[roomId]){
+      const wsRoom=wsRooms.get(roomId);
+      if(!wsRoom) return sendJSON(404,{error:'Raum nicht gefunden'});
+      data.rooms[roomId]={id:roomId,state:'rematch',rematch:{},created:Date.now(),
+        host:wsRoom.host?.uid||'',game:wsRoom.game||'',players:[]};
+    }
     const room=data.rooms[roomId];
-    if(!room) return sendJSON(404,{error:'Raum nicht gefunden'});
     if(!room.rematch) room.rematch={};
     const {player}=body;
     room.rematch[player]=true;
     const bothReady=room.rematch.host&&room.rematch.guest;
     if(bothReady){
       room.rematch={};
+      room.state='waiting';
       saveData(data);
-      return sendJSON(200,{bothReady:true});
+      return sendJSON(200,{bothReady:true,roomId});
     }
     saveData(data);
     return sendJSON(200,{bothReady:false});
