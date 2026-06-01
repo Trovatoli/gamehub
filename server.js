@@ -921,14 +921,19 @@ function handleAPI(pathname, method, body, req, res) {
     const room=data.rooms[roomId];
     if(!room.rematch) room.rematch={};
     const {player}=body;
-    room.rematch[player]=true;
-    const bothReady=room.rematch.host&&room.rematch.guest;
+    // If bothReady already set recently, both players get the signal
+    const alreadyReady=room.rematch.readyAt&&(Date.now()-room.rematch.readyAt)<10000;
+    if(!alreadyReady) room.rematch[player]=true;
+    const bothReady=alreadyReady||(room.rematch.host&&room.rematch.guest);
     if(bothReady){
-      room.rematch={};
-      room.state='waiting';
-      room.closedAt=null;
-      room.sync={};  // clear old game moves
-      saveData(data);
+      if(!alreadyReady){
+        // First time bothReady: reset room for new game
+        room.rematch={readyAt:Date.now()};
+        room.state='waiting';
+        room.closedAt=null;
+        room.sync={};
+        saveData(data);
+      }
       return sendJSON(200,{bothReady:true,roomId});
     }
     saveData(data);
