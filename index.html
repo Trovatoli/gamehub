@@ -197,7 +197,7 @@
 </div>
 </div>
 <!-- ── LOBBY ── -->
-<div class="page" id="page-lobby">
+<div class="page" id="page-lobby"><button onclick="currentGame?nav('game'):nav('home')" style="position:absolute;top:10px;right:16px;z-index:100;background:rgba(255,255,255,.1);border:1px solid var(--border);color:var(--text);font-size:18px;font-weight:900;cursor:pointer;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">✕</button>
 <div class="lobby-header">
 <div class="stitle" style="margin:0"><span data-i18n="lobby.open">Offene Lobbys</span></div>
 <button class="create-lobby-btn" onclick="toggleCreatePanel()">+ <span data-i18n="lobby.create.lobby">Lobby erstellen</span></button>
@@ -239,8 +239,8 @@
 </div>
 </div>
 <!-- ── CHAT ── -->
-<div class="page" id="page-chat" style="padding:16px;gap:0;overflow:hidden">
-<div class="chat-layout" style="flex:1;min-height:0">
+<div class="page" id="page-chat" style="position:relative;" style="padding:16px;gap:0;overflow:hidden">
+<button onclick="currentGame?nav('game'):nav('home')" id="chat-close-btn" style="position:absolute;top:10px;right:16px;z-index:100;background:rgba(255,255,255,.1);border:1px solid var(--border);color:var(--text);font-size:18px;font-weight:900;cursor:pointer;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:inherit;">✕</button><div class="chat-layout" style="flex:1;min-height:0">
 <div class="chat-rooms-col">
 <div class="room-group"><span data-i18n="chat.friends">Freunde</span></div>
 <div id="dm-list" style="display:flex;flex-direction:column;gap:2px"></div>
@@ -270,7 +270,7 @@ style="width:100%;background:var(--bg3);border:1px solid var(--border);border-ra
 </div>
 </div>
 <!-- ── STATS ── -->
-<div class="page" id="page-stats">
+<div class="page" id="page-stats"><button onclick="currentGame?nav('game'):nav('home')" style="position:absolute;top:10px;right:16px;z-index:100;background:rgba(255,255,255,.1);border:1px solid var(--border);color:var(--text);font-size:18px;font-weight:900;cursor:pointer;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">✕</button>
 <div class="stats-kpis">
 <div class="kpi"><div class="kpi-label"><span data-i18n="stats.total.points">Gesamtpunkte</span></div><div class="kpi-val" id="stat-pts">0</div><div class="kpi-sub"><span data-i18n="ui.total">Gesamt</span></div></div>
 <div class="kpi"><div class="kpi-label"><span data-i18n="stats.best.game">Bestes Spiel</span></div><div class="kpi-val" id="stat-best-game">—</div><div class="kpi-sub" id="stat-best-pts">0 Pts</div></div>
