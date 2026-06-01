@@ -9,6 +9,22 @@
   <title>GameHub</title>
   <meta id="gamehub-version" content="1778007528">
   <link rel="stylesheet" href="main.css?v=1780244495">
+
+<script>
+function toggleChatPanel(el){
+  var panel=document.getElementById('chat-panel-overlay');
+  if(!panel)return;
+  var open=panel.classList.toggle('open');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  if(open&&el)el.classList.add('active');
+  if(open)setTimeout(function(){if(typeof _renderCpoFriends==='function')_renderCpoFriends();},100);
+}
+function closeChatPanel(){
+  var panel=document.getElementById('chat-panel-overlay');
+  if(panel)panel.classList.remove('open');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+}
+</script>
 </head>
 <body class="theme-neon">
 
