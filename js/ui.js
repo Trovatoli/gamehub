@@ -1,14 +1,19 @@
 function nav(page,el){
 document.getElementById('ingame-close-btn')?.remove();
-
-// Always stop game when navigating away
-if(page!=='game')stopAll();
-// Toggle: if already on this page, go back
+const _inGame=!!(currentGame);
+const _gameWasActive=document.getElementById('page-game')?.classList.contains('active');
+// Toggle: if already on this page, close it
 const currentActivePage=document.querySelector('.page.active');
-if(currentActivePage&&currentActivePage.id==='page-'+page){
-  if(currentGame)nav('game');
-  else nav('home');
-  return;
+if(currentActivePage&&currentActivePage.id==='page-'+page&&page!=='game'){
+  // Close: go back to game if running, else home
+  if(_inGame){paused=false;document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-game').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));updateBackToGameBtn();return;}
+  else{stopAll();document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-home').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));return;}
+}
+// Navigate away from game: pause (don't stop) so user can return
+if(page!=='game'&&_inGame){
+  paused=true;
+} else if(page!=='game'){
+  stopAll();
 }
 document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
