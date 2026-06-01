@@ -1,7 +1,7 @@
 function nav(page,el){
 // Toggle: only when in-game, clicking same page closes it and returns to game
-const _activePg=document.querySelector('.page.active');
-if(currentGame&&_activePg&&_activePg.id==='page-'+page&&page!=='game'&&page!=='home'){
+if(currentGame&&window._navInGamePage===page&&page!=='game'&&page!=='home'){
+  window._navInGamePage=null;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   paused=false;
@@ -9,6 +9,8 @@ if(currentGame&&_activePg&&_activePg.id==='page-'+page&&page!=='game'&&page!=='h
   updateBackToGameBtn();
   return;
 }
+if(currentGame&&page!=='game'&&page!=='home') window._navInGamePage=page;
+else if(page==='game') window._navInGamePage=null;
 // If navigating away from game but game is still running, just pause (don't stop)
 const wasInGame=document.getElementById('page-game')?.classList.contains('active');
 if(page!=='game'&&page!=='premenu'){
@@ -904,6 +906,9 @@ function _ensureChatPanel() {
 }
 
 function navChat(el) {
+  // Not in-game: navigate to full chat page normally
+  if (!currentGame) { nav('chat', el); return; }
+  // In-game: use slide panel
   _ensureChatPanel();
   const p = document.getElementById('chat-slide-panel');
   const isOpen = p.classList.contains('open');
