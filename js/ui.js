@@ -1,96 +1,83 @@
-function _showGamePanel(page, el){
-  // Toggle: if same panel already open, close it
-  const existing = document.getElementById('game-panel-overlay');
-  if(existing && existing.dataset.page === page){
-    existing.remove();
-    return;
-  }
-  if(existing) existing.remove();
-
-  // Create overlay panel
-  const panel = document.createElement('div');
-  panel.id = 'game-panel-overlay';
-  panel.dataset.page = page;
-  panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;width:min(480px,90vw);background:var(--bg2,#0d0d24);border-left:2px solid var(--c1,#00f5ff);z-index:9999;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.6);';
-
-  // Header with close button
-  const hdr = document.createElement('div');
-  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg3,#0a0a1a);';
-  hdr.innerHTML = '<span style="font-weight:700;font-size:14px;color:var(--text)">'+getPageTitle(page)+'</span>';
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '✕';
-  closeBtn.style.cssText = 'background:rgba(255,255,255,.1);border:none;color:var(--text);font-size:18px;font-weight:900;cursor:pointer;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:inherit;';
-  closeBtn.onclick = () => panel.remove();
-  hdr.appendChild(closeBtn);
-  panel.appendChild(hdr);
-
-  // Content: clone page content into panel
-  const content = document.createElement('div');
-  content.style.cssText = 'flex:1;overflow:auto;display:flex;flex-direction:column;';
-  const srcPage = document.getElementById('page-'+page);
-  if(srcPage){
-    // Move real page into panel
-    srcPage._panelOrigParent = srcPage.parentNode;
-    srcPage._panelOrigNext = srcPage.nextSibling;
-    srcPage.style.flex = '1';
-    srcPage.style.minHeight = '0';
-    srcPage.style.display = 'flex';
-    srcPage.classList.add('active');
-    content.appendChild(srcPage);
-  }
-  panel.appendChild(content);
-  document.body.appendChild(panel);
-
-  // Load page data
-  if(page==='chat'){try{renderDMList&&renderDMList();}catch(e){}}
-  if(page==='lobby'){try{loadLobbies();}catch(e){}}
-  if(page==='stats'){try{updateStats();}catch(e){}}
-
-  // Restore page when panel is removed
-  const observer = new MutationObserver(()=>{
-    if(!document.body.contains(panel)){
-      if(srcPage && srcPage._panelOrigParent){
-        srcPage.style.flex=''; srcPage.style.minHeight=''; srcPage.style.display='';
-        srcPage.classList.remove('active');
-        if(srcPage._panelOrigNext) srcPage._panelOrigParent.insertBefore(srcPage, srcPage._panelOrigNext);
-        else srcPage._panelOrigParent.appendChild(srcPage);
-      }
-      observer.disconnect();
-    }
-  });
-  observer.observe(document.body, {childList:true});
-}
-
 function nav(page,el){
-document.getElementById('ingame-close-btn')?.remove();
-const _inGame=!!(currentGame);
-console.log('[NAV] page='+page+' _inGame='+_inGame+' currentGame='+!!currentGame);
-const _gameWasActive=document.getElementById('page-game')?.classList.contains('active');
-// Toggle: if already on this page, close it (NO recursive nav call!)
-const currentActivePage=document.querySelector('.page.active');
-if(currentActivePage&&currentActivePage.id==='page-'+page&&page!=='game'){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  if(_inGame){
-    paused=false;
-    document.getElementById('page-game').classList.add('active');
-    updateBackToGameBtn();
-  } else {
-    stopAll();
-    document.getElementById('page-home').classList.add('active');
-  }
-  return;
+// If navigating away from game but game is still running, just pause (don't stop)
+const wasInGame=document.getElementById('page-game')?.classList.contains('active');
+if(page!=='game'&&page!=='premenu'){
+if(wasInGame&&currentGame&&page!=='home'){
+// Pause game without stopping it
+paused=true;
+} else {
+stopAll();
 }
-// If in game: show requested page as a closeable overlay panel
-if(_inGame && page!=='game' && page!=='home'){
-  _showGamePanel(page, el);
-  return;
 }
-if(page!=='game') stopAll();
+// If returning to game, unpause
+if(page==='game'&&currentGame)paused=false;
 document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+if(page==='game'||(wasInGame&&currentGame&&page!=='home')){
+// Keep game page visible, show target as overlay if not game
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById('page-game')?.classList.add('active');
+if(page!=='game'){
+// Show non-game page as floating overlay
+let overlay=document.getElementById('nav-overlay');
+if(!overlay){
+overlay=document.createElement('div');
+overlay.id='nav-overlay';
+overlay.style.cssText='position:fixed;top:0;right:0;bottom:0;width:min(420px,80vw);background:var(--bg2,var(--bg));border-left:1px solid var(--border);z-index:100;display:flex;flex-direction:column;overflow:hidden;box-shadow:-4px 0 20px rgba(0,0,0,.4);';
+document.body.appendChild(overlay);
+}
+const targetPage=document.getElementById('page-'+page);
+if(targetPage){
+// Clear overlay but keep close button
+overlay.innerHTML='';
+const closeBtn=document.createElement('div');
+closeBtn.innerHTML=t('lobby.close.back');
+closeBtn.style.cssText='padding:10px 16px;cursor:pointer;font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);font-weight:700;flex-shrink:0;';
+closeBtn.onclick=()=>nav('game');
+overlay.appendChild(closeBtn);
+// Move REAL page element into overlay (keeps all JS/events working)
+targetPage._origParent=targetPage.parentNode;
+targetPage._origNextSibling=targetPage.nextSibling;
+targetPage.style.flex='1';
+targetPage.style.minHeight='0';
+targetPage.style.display='flex';
+targetPage.classList.add('active');
+overlay.appendChild(targetPage);
+overlay.style.display='flex';
+overlay._activePage=page;
+// Init page content
+if(page==='account'){try{renderAccount();loadFriendRequests();}catch(e){}}
+if(page==='lobby'){try{loadLobbies();}catch(e){}}
+if(page==='stats'){try{updateStats();}catch(e){}}
+
+}
+} else {
+// Returning to game - move page back and close overlay
+const ol=document.getElementById('nav-overlay');
+if(ol){
+// Move page back to original parent
+const activePage=ol._activePage;
+if(activePage){
+const pg=document.getElementById('page-'+activePage);
+if(pg&&pg._origParent){
+pg.classList.remove('active');
+pg.style.flex='';
+pg.style.minHeight='';
+pg.style.display='';
+if(pg._origNextSibling)pg._origParent.insertBefore(pg,pg._origNextSibling);
+else pg._origParent.appendChild(pg);
+}
+}
+ol.remove();
+}
+paused=false;
+}
+} else {
 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 const p=document.getElementById('page-'+page);
 if(p)p.classList.add('active');
+const ol=document.getElementById('nav-overlay');
+if(ol)ol.remove();
+}
 document.getElementById('page-title').textContent=getPageTitle(page);
 if(el)el.classList.add('active');
 if(page!=='game')document.getElementById('igchat').classList.remove('show');
@@ -107,16 +94,6 @@ if(page==='lobby'){loadLobbies();clearInterval(window._lobbyTimer);window._lobby
 else{clearInterval(window._lobbyTimer);}
 applyTranslations();
 updateBackToGameBtn();
-// If game is paused, add a close button to current page
-document.getElementById('ingame-close-btn')?.remove();
-if(currentGame&&paused&&page!=='game'){
-  const btn=document.createElement('button');
-  btn.id='ingame-close-btn';
-  btn.textContent='✕ Zurück zum Spiel';
-  btn.style.cssText='position:fixed;top:12px;right:12px;z-index:9999;background:var(--c1,#00f5ff);color:#000;border:none;padding:8px 18px;border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(0,0,0,.4);';
-  btn.onclick=()=>nav('game');
-  document.body.appendChild(btn);
-}
 }
 
 // ════════════════════════════════════════════════
@@ -870,3 +847,125 @@ out.appendChild(div);
 },300);
 });
 });
+
+// ── Chat Slide Panel ────────────────────────────────────────────
+let _cspFriend = null;
+
+function _ensureChatPanel() {
+  if (document.getElementById('chat-slide-panel')) return;
+  // Add CSS
+  const st = document.createElement('style');
+  st.textContent = `
+/* ── Chat Panel ── */
+#chat-slide-panel{position:fixed;top:0;right:-520px;bottom:0;width:min(460px,88vw);background:var(--bg2,#0d0d24);border-left:2px solid var(--c1);z-index:9999;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.7);transition:right .22s ease;pointer-events:all;}
+#chat-slide-panel.open{right:0;}
+#chat-slide-panel .csp-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg3,#080818);}
+#chat-slide-panel .csp-hdr b{font-size:14px;color:var(--text);}
+#chat-slide-panel .csp-x{background:rgba(255,255,255,.12);border:none;color:var(--text);font-size:18px;font-weight:900;cursor:pointer;border-radius:7px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+#chat-slide-panel .csp-body{flex:1;display:flex;overflow:hidden;}
+#chat-slide-panel .csp-friends{width:150px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;padding:8px;}
+#chat-slide-panel .csp-friend{padding:7px 6px;cursor:pointer;border-radius:7px;font-size:12px;display:flex;align-items:center;gap:6px;color:var(--text);}
+#chat-slide-panel .csp-friend:hover{background:rgba(255,255,255,.06);}
+#chat-slide-panel .csp-chat{flex:1;display:flex;flex-direction:column;min-width:0;}
+#chat-slide-panel .csp-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:5px;}
+#chat-slide-panel .csp-msg-own{background:var(--c1);color:#000;padding:5px 10px;border-radius:10px;font-size:12px;max-width:80%;align-self:flex-end;word-break:break-word;}
+#chat-slide-panel .csp-msg-them{background:var(--bg3,#1a1a3a);color:var(--text);padding:5px 10px;border-radius:10px;font-size:12px;max-width:80%;align-self:flex-start;word-break:break-word;}
+#chat-slide-panel .csp-inp{display:flex;gap:6px;padding:8px;border-top:1px solid var(--border);flex-shrink:0;}
+#chat-slide-panel .csp-inp input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;padding:7px 10px;font-family:inherit;outline:none;}
+#chat-slide-panel .csp-inp button{padding:7px 14px;background:var(--c1);color:#000;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;}
+`;
+  document.head.appendChild(st);
+  // Build HTML
+  const p = document.createElement('div');
+  p.id = 'chat-slide-panel';
+  p.innerHTML = `
+    <div class="csp-hdr"><b>💬 Chat</b><button class="csp-x" onclick="navChatClose()">✕</button></div>
+    <div class="csp-body">
+      <div class="csp-friends" id="csp-friends"></div>
+      <div class="csp-chat">
+        <div class="csp-msgs" id="csp-msgs"><div style="color:var(--muted);font-size:12px;text-align:center;padding:20px;">Wähle einen Freund</div></div>
+        <div class="csp-inp">
+          <input id="csp-input" placeholder="Nachricht..." disabled onkeydown="if(event.key==='Enter')cspSend()">
+          <button onclick="cspSend()" id="csp-send">→</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(p);
+}
+
+function navChat(el) {
+  _ensureChatPanel();
+  const p = document.getElementById('chat-slide-panel');
+  const isOpen = p.classList.contains('open');
+  if (isOpen) {
+    p.classList.remove('open');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  } else {
+    p.classList.add('open');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    if (el) el.classList.add('active');
+    _cspRenderFriends();
+  }
+}
+
+function navChatClose() {
+  const p = document.getElementById('chat-slide-panel');
+  if (p) p.classList.remove('open');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+}
+
+function _cspRenderFriends() {
+  const list = document.getElementById('csp-friends');
+  if (!list) return;
+  list.innerHTML = '<div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;padding:2px 4px;">FREUNDE</div>';
+  (friendsList || []).forEach(f => {
+    const d = document.createElement('div');
+    d.className = 'csp-friend';
+    d.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:'+(f.online?'#4ade80':'#555')+';flex-shrink:0;display:inline-block"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(f.name||'?')+'</span>';
+    d.onclick = () => _cspOpen(f.uid, f.name);
+    list.appendChild(d);
+  });
+  if (!(friendsList||[]).length) list.innerHTML += '<div style="font-size:11px;color:var(--muted);padding:4px;">Keine Freunde</div>';
+}
+
+function _cspOpen(uid, name) {
+  _cspFriend = uid;
+  const inp = document.getElementById('csp-input');
+  const btn = document.getElementById('csp-send');
+  if (inp) { inp.disabled = false; inp.placeholder = name+'...'; inp.focus(); }
+  if (btn) btn.disabled = false;
+  const msgs = document.getElementById('csp-msgs');
+  if (!msgs) return;
+  msgs.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px;">'+name+'</div>';
+  try {
+    const k = 'dms_'+[fbUser?.uid,uid].sort().join('_');
+    JSON.parse(localStorage.getItem(k)||'[]').slice(-50).forEach(m => {
+      const d=document.createElement('div');
+      d.className='csp-msg-'+(m.from===fbUser?.uid?'own':'them');
+      d.textContent=m.text;
+      msgs.appendChild(d);
+    });
+    msgs.scrollTop=msgs.scrollHeight;
+  } catch(e){}
+}
+
+function cspSend() {
+  if (!_cspFriend) return;
+  const inp = document.getElementById('csp-input');
+  const text = inp?.value?.trim();
+  if (!text) return;
+  inp.value = '';
+  const msgs = document.getElementById('csp-msgs');
+  if (msgs) {
+    const d=document.createElement('div');d.className='csp-msg-own';d.textContent=text;
+    msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+  }
+  if (socialWs&&socialWs.readyState===1)
+    socialWs.send(JSON.stringify({type:'dm',to:_cspFriend,text,from:fbUser?.uid,fromName:currentUser?.name||''}));
+  try {
+    const k='dms_'+[fbUser?.uid,_cspFriend].sort().join('_');
+    const s=JSON.parse(localStorage.getItem(k)||'[]');
+    s.push({from:fbUser?.uid,text,ts:Date.now()});
+    localStorage.setItem(k,JSON.stringify(s.slice(-200)));
+  } catch(e){}
+}
