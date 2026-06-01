@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GameHub</title>
+  <meta id="gamehub-version" content="1778007528">
+  <link rel="stylesheet" href="main.css?v=1780244495">
+</head>
+<body class="theme-neon">
+
+<!-- Auth Gate: shown before login -->
+<div id="auth-gate">
+<div class="auth-gate-box">
+<div class="auth-gate-logo">
+<div class="logo-icon">🎮</div>
+<div class="logo-title">GameHub</div>
+<div class="logo-sub" id="gate-subtitle">Einloggen oder Account erstellen</div>
+</div>
+<div class="auth-gate-tabs">
+<button class="auth-gate-tab active" id="gate-tab-login" onclick="gateSwitchTab('login')">Einloggen</button>
+<button class="auth-gate-tab" id="gate-tab-register" onclick="gateSwitchTab('register')">Registrieren</button>
+</div>
+<div id="gate-msg" class="auth-gate-msg"></div>
+<div id="gate-form-login">
+<div class="auth-gate-field">
+<div class="auth-gate-label">E-MAIL</div>
+<input id="gate-email" class="auth-gate-input" type="email" placeholder="deine@email.de" autocomplete="email">
+</div>
+<div class="auth-gate-field">
+<div class="auth-gate-label">PASSWORT</div>
+<input id="gate-pass" class="auth-gate-input" type="password" placeholder="Passwort..." autocomplete="current-password">
+</div>
+<button id="gate-btn-login" class="auth-gate-btn" onclick="gateDoLogin()">Einloggen</button>
+</div>
+<div id="gate-form-register" style="display:none">
+<div class="auth-gate-field">
+<div class="auth-gate-label">NAME</div>
+<input id="gate-name" class="auth-gate-input" type="text" placeholder="Dein Name..." maxlength="20" autocomplete="username">
+</div>
+<div class="auth-gate-field">
+<div class="auth-gate-label">E-MAIL</div>
+<input id="gate-email2" class="auth-gate-input" type="email" placeholder="deine@email.de" autocomplete="email">
+</div>
+<div class="auth-gate-field">
+<div class="auth-gate-label">PASSWORT</div>
+<input id="gate-pass2" class="auth-gate-input" type="password" placeholder="Min. 6 Zeichen..." autocomplete="new-password">
+</div>
+<button id="gate-btn-register" class="auth-gate-btn" onclick="gateDoRegister()">Account erstellen</button>
+</div>
+</div>
+</div>
+<!-- INGAME CHAT -->
+<div class="igchat" id="igchat">
+<div class="igchat-hdr" onclick="toggleIgChat()">
+<span class="igchat-title">💬 Ingame Chat</span>
+<span class="igchat-x">×</span>
+</div>
+<div class="igchat-msgs" id="igmsgs"></div>
+<div class="igchat-inp">
+<input id="igcinput" placeholder="Nachricht..." onkeydown="if(event.key==='Enter')sendIgMsg()">
+<button onclick="sendIgMsg()">→</button>
+</div>
+</div>
+<div class="app" id="app-root" style="display:none">
+<!-- ═══ SIDEBAR ═══════════════════════════════ -->
+<div class="sidebar">
+<div class="logo" onclick="nav('home')">
+<div class="logo-name">GAMEHUB</div>
+<div class="logo-tag">Play · Connect · Win</div>
+</div>
+<nav>
+<div class="nav-group">Spielen</div>
+<div class="nav-item active" onclick="nav('home',this)"><span class="nav-icon">⊞</span>Spiele</div>
+<div class="nav-item" onclick="nav('lobby',this)"><span class="nav-icon">🎮</span>Lobby<span class="nav-badge" id="lobby-badge"></span></div>
+<div class="nav-group">Community</div>
+<div class="nav-item" onclick="nav('chat',this)"><span class="nav-icon">💬</span>Chat</div>
+<div class="nav-item" onclick="nav('stats',this)"><span class="nav-icon">📊</span>Statistik</div>
+<div class="nav-group">Einstellungen</div>
+<div class="nav-item" onclick="nav('settings',this)"><span class="nav-icon">⚙</span>Einstellungen</div>
+<div class="nav-item" onclick="nav('impressum',this)"><span class="nav-icon">📄</span>Impressum</div>
+</nav>
+<div class="online-section" id="friends-section">
+<div id="friend-requests-section" style="display:none;margin-bottom:8px"></div>
+<div class="online-hdr" id="online-hdr">Online — 0</div>
+<div id="friends-list"></div>
+<button id="add-friend-btn" onclick="openAddFriend()" style="width:100%;margin-top:8px;padding:8px;background:var(--c1);border:none;border-radius:7px;color:#000;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.3px">👥 <span data-i18n="ui.add.player">Spieler hinzufügen</span></button>
+</div>
+<div class="sidebar-user" onclick="nav('account')">
+<div class="sidebar-user-inner">
+<div class="av av-c" id="sb-av" style="width:32px;height:32px;font-size:11px">?</div>
+<div style="flex:1;min-width:0">
+<div class="su-name" id="sb-name">Nicht eingeloggt</div>
+<div class="su-pts" id="sb-pts"></div>
+</div>
+<span style="font-size:11px;color:var(--muted)">›</span>
+</div>
+</div>
+</div>
+<!-- ═══ MAIN ══════════════════════════════════ -->
+<div class="main">
+<div class="topbar">
+<div class="page-title" id="page-title">Spiele</div>
+<div class="topbar-right">
+<div class="pts-chip" id="top-pts">0 <span data-i18n="ui.points">Punkte</span></div>
+<div class="icon-btn" onclick="handleGearClick()" data-i18n-title='settings.gear.title' title='Einstellungen'>⚙</div>
+<div class="av av-c" id="top-av" style="width:30px;height:30px;font-size:10px;cursor:pointer" onclick="nav('account')">?</div>
+</div>
+</div>
+<!-- ── HOME ── -->
+<div class="page active" id="page-home">
+<div class="stitle">Spiel auswählen</div>
+<div class="games-grid" style="grid-template-columns:repeat(2,1fr)">
+<div class="gcard" style="--gc:var(--c1)" onclick="launch('snake')">
+<span class="gcard-badge badge-hot">Beliebt</span>
+<span class="gcard-icon">🐍</span>
+<div class="gcard-name">Snake</div>
+<div class="gcard-sub">Pfeiltasten · vs KI</div>
+</div>
+<div class="gcard" style="--gc:#22c55e" onclick="launch('snakeclassic')">
+<span class="gcard-badge" style="background:#22c55e">Classic</span>
+<span class="gcard-icon">🟩</span>
+<div class="gcard-name" data-i18n="game.snakeclassic">Snake Classic</div>
+<div class="gcard-sub">Nostalgie · Solo</div>
+</div>
+<div class="gcard" style="--gc:var(--c2)" onclick="launch('pong')">
+<span class="gcard-badge badge-hot">Live</span>
+<span class="gcard-icon">🏓</span>
+<div class="gcard-name">Pong</div>
+<div class="gcard-sub">Maus oder Tasten</div>
+</div>
+<div class="gcard" style="--gc:var(--c3)" onclick="launch('vier')">
+<span class="gcard-icon">🔴</span>
+<div class="gcard-name" data-i18n="game.vier">4 Gewinnt</div>
+<div class="gcard-sub">Klick · vs KI</div>
+</div>
+<div class="gcard" style="--gc:var(--c4)" onclick="launch('battle')">
+<span class="gcard-icon">🚢</span>
+<div class="gcard-name" data-i18n="game.battle">Schiffe versenken</div>
+<div class="gcard-sub">Platziere deine Flotte</div>
+</div>
+<div class="gcard" style="--gc:#ffd700" onclick="launch('kniffel')">
+<span class="gcard-badge badge-new">Neu</span>
+<span class="gcard-icon">🎲</span>
+<div class="gcard-name" data-i18n="game.kniffel">Kniffel</div>
+<div class="gcard-sub">Solo oder vs KI</div>
+</div>
+<div class="gcard" style="--gc:#ff88ff" onclick="launch('pacman')">
+<span class="gcard-badge badge-new">Neu</span>
+<span class="gcard-icon">👾</span>
+<div class="gcard-name">Pac-Man</div>
+<div class="gcard-sub">Klassisch oder Modern</div>
+</div>
+</div>
+</div>
+<!-- ── PRE-MENU ── -->
+<div class="page" id="page-premenu">
+<div class="premenu-box" id="premenu-box"></div>
+</div>
+<!-- ── LOBBY SELECT ── -->
+<div class="page" id="page-lobby-select">
+<div class="ls-card" id="ls-card"></div>
+</div>
+<!-- ── GAME ── -->
+<div class="page" id="page-game">
+<div class="game-shell">
+<div class="game-topbar">
+<div class="game-topbar-left">
+<div class="game-back" onclick="stopAndHome()" id="game-back-btn">← Zurück</div>
+<div class="game-title-bar" id="g-title">—</div>
+<div class="score-chips">
+<span class="score-chip score-chip-you"><span data-i18n="score.you">Du</span>: <b id="s1">0</b></span>
+<span class="score-chip score-chip-ai" id="s2-chip"><span id="s2lbl" data-i18n="score.ai">KI</span>: <b id="s2">0</b></span>
+</div>
+</div>
+<div class="game-ctrl-btns">
+<button class="ctrl-btn" id="pause-btn" onclick="togglePause()">⏸ Pause</button>
+<button class="ctrl-btn" onclick="toggleIgChat()">💬</button>
+<button class="ctrl-btn" onclick="openInGameSettings()">⚙</button>
+<button class="ctrl-btn" onclick="restartGame()">↺ Neu</button>
+</div>
+</div>
+<div class="game-canvas-area" id="canvas-area">
+<canvas id="gc"></canvas>
+<div id="kniffel-ui" style="display:none"></div>
+<div class="pause-overlay" id="pause-overlay">
+<div class="pause-title">PAUSE</div>
+<button class="pause-action pa-primary" onclick="togglePause()">▶ Weiterspielen</button>
+<button class="pause-action pa-secondary" onclick="restartGame()">↺ Neustart</button>
+<button class="pause-action pa-secondary" onclick="stopAndHome()">← Hauptmenü</button>
+</div>
+</div>
+<div class="game-statusbar" id="g-status">Bereit</div>
+</div>
+</div>
+<!-- ── LOBBY ── -->
+<div class="page" id="page-lobby">
+<div class="lobby-header">
+<div class="stitle" style="margin:0"><span data-i18n="lobby.open">Offene Lobbys</span></div>
+<button class="create-lobby-btn" onclick="toggleCreatePanel()">+ <span data-i18n="lobby.create.lobby">Lobby erstellen</span></button>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+<button onclick="loadLobbies()" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600"><span>🔄 </span><span data-i18n="lobby.refresh">Aktualisieren</span></button>
+<div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px"><span data-i18n="lobby.vs.player">VS Spieler</span>:</div>
+<button onclick="createPublicLobby('vier')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600"><span data-i18n="game.vier">4 Gewinnt</span></button>
+<button onclick="createPublicLobby('snake')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🐍 Snake</button>
+<button onclick="createPublicLobby('pong')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🏓 Pong</button>
+<button onclick="createPublicLobby('battle')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🚢 <span data-i18n="game.battle">Schiffe</span></button>
+<button onclick="createPublicLobby('kniffel')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🎲 <span data-i18n="game.kniffel">Kniffel</span></button>
+<div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin:6px 0 4px"><span data-i18n="lobby.ai">VS KI</span>:</div>
+<button onclick="createAILobby('vier')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600"><span data-i18n="game.vier">4 Gewinnt</span></button>
+<button onclick="createAILobby('snake')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🐍 Snake</button>
+<button onclick="createAILobby('pong')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🏓 Pong</button>
+</div>
+<div id="lobby-list">
+<div style="color:var(--muted);font-size:12px;padding:20px;text-align:center" id="lobby-empty">Lade Lobbys...</div>
+</div>
+<div class="create-panel" id="create-panel">
+<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px">Neue Lobby</div>
+<div class="field"><div class="field-label">Spiel</div>
+<div class="opts-row">
+<button class="opt-btn sel" onclick="selLobbyGame(this,'snake','🐍')">🐍 Snake</button>
+<button class="opt-btn" onclick="selLobbyGame(this,'pong','🏓')">🏓 Pong</button>
+<button class="opt-btn" onclick="selLobbyGame(this,'vier','🔴')"><span data-i18n="game.vier">4 Gewinnt</span></button>
+<button class="opt-btn" onclick="selLobbyGame(this,'battle','🚢')">🚢 <span data-i18n="game.battle">Schiffe</span></button>
+<button class="opt-btn" onclick="selLobbyGame(this,'kniffel','🎲')">🎲 <span data-i18n="game.kniffel">Kniffel</span></button>
+</div>
+</div>
+<div class="field"><div class="field-label">Name</div>
+<input id="lobby-name" type="text" placeholder="" data-i18n-ph='lobby.name.placeholder' style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none">
+</div>
+<div style="display:flex;gap:8px">
+<button onclick="createLobby()" style="flex:1;padding:9px;background:var(--c1);color:#000;border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">Erstellen & Beitreten</button>
+<button onclick="toggleCreatePanel()" style="padding:9px 13px;background:transparent;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit">Abbrechen</button>
+</div>
+</div>
+</div>
+<!-- ── CHAT ── -->
+<div class="page" id="page-chat" style="padding:16px;gap:0;overflow:hidden">
+<div class="chat-layout" style="flex:1;min-height:0">
+<div class="chat-rooms-col">
+<div class="room-group"><span data-i18n="chat.friends">Freunde</span></div>
+<div id="dm-list" style="display:flex;flex-direction:column;gap:2px"></div>
+<div class="room-group" style="margin-top:8px"><span data-i18n="chat.search">Suchen</span></div>
+<div style="padding:4px">
+<input id="search-input" placeholder="Name..." maxlength="20"
+style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:11px;font-family:inherit;outline:none">
+</div>
+<div id="search-results"></div>
+</div>
+<div class="chat-window">
+<div class="chat-win-hdr" id="chat-hdr">
+<span id="chat-with-name" data-i18n="chat.select.friend">Wähle einen Freund</span>
+<span class="online-ind" id="chat-with-status"></span>
+<button id="chat-invite-btn" style="display:none;margin-left:auto;padding:3px 10px;background:var(--c1);color:#000;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">🎮 Einladen</button>
+</div>
+<div class="msgs" id="msgs">
+<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px">
+<span data-i18n="chat.select.hint">Wähle einen Freund zum Chatten</span> 👆
+</div>
+</div>
+<div class="chat-input">
+<input id="cinput" placeholder="" data-i18n-ph="chat.write" disabled>
+<button class="chat-send" id="chat-send-btn" disabled>→</button>
+</div>
+</div>
+</div>
+</div>
+<!-- ── STATS ── -->
+<div class="page" id="page-stats">
+<div class="stats-kpis">
+<div class="kpi"><div class="kpi-label"><span data-i18n="stats.total.points">Gesamtpunkte</span></div><div class="kpi-val" id="stat-pts">0</div><div class="kpi-sub"><span data-i18n="ui.total">Gesamt</span></div></div>
+<div class="kpi"><div class="kpi-label"><span data-i18n="stats.best.game">Bestes Spiel</span></div><div class="kpi-val" id="stat-best-game">—</div><div class="kpi-sub" id="stat-best-pts">0 Pts</div></div>
+<div class="kpi"><div class="kpi-label" data-i18n="chat.friends">Freunde</div><div class="kpi-val" id="stat-friends">0</div><div class="kpi-sub">Online</div></div>
+<div class="kpi"><div class="kpi-label"><span data-i18n="stats.rank">Rang</span></div><div class="kpi-val" id="stat-rank">#—</div><div class="kpi-sub"><span data-i18n="stats.leaderboard">Bestenliste</span></div></div>
+</div>
+<div class="leaderboard">
+<div class="lb-hdr">🏆 <span data-i18n="stats.leaderboard">Bestenliste</span></div>
+<div id="leaderboard-rows"><div style="padding:14px;color:var(--muted);font-size:12px;text-align:center">Lade...</div></div>
+</div>
+</div>
+<!-- ── SETTINGS ── -->
+<div class="page" id="page-settings">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<button onclick="nav('home',document.querySelector('.nav-item'))" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-family:inherit;font-weight:600" id="settings-back-btn">← Zurück</button>
+<div class="stitle" style="margin:0" data-i18n="set.pagetitle">Einstellungen</div>
+</div>
+<div class="settings-grid">
+<div class="set-card">
+<div class="set-title">Design Theme</div>
+<div class="theme-grid">
+<button class="theme-btn active" onclick="setTheme('neon',this)">🌟 Dark Neon</button>
+<button class="theme-btn" onclick="setTheme('light',this)">☀ Hell & Clean</button>
+<button class="theme-btn" onclick="setTheme('retro',this)">💾 Retro Terminal</button>
+</div>
+</div>
+<div class="set-card">
+<div class="set-title">Sprache</div>
+<div class="lang-btns">
+<button class="lang-btn active" onclick="setLang('de',this)">🇩🇪 Deutsch</button>
+<button class="lang-btn" onclick="setLang('en',this)">🇬🇧 English</button>
+</div>
+</div>
+<div class="set-card">
+<div class="set-title">Audio</div>
+<div class="set-row"><span class="set-label">Spielsounds</span><div class="toggle on" id="tog-sound" onclick="toggleSetting('sound',this)"></div></div>
+<div class="set-row"><span class="set-label">Musik</span><div class="toggle" id="tog-music" onclick="toggleSetting('music',this)"></div></div>
+<div class="set-row"><span class="set-label">Benachrichtigungen</span><div class="toggle on" id="tog-notify" onclick="toggleSetting('notify',this)"></div></div>
+</div>
+<div class="set-card">
+<div class="set-title">Spiel</div>
+<div class="set-row"><span class="set-label">Animationen</span><div class="toggle on" id="tog-anim" onclick="toggleSetting('anim',this)"></div></div>
+<div class="set-row"><span class="set-label">Hinweise</span><div class="toggle on" id="tog-hints" onclick="toggleSetting('hints',this)"></div></div>
+</div>
+</div>
+</div>
+<!-- ── ACCOUNT ── -->
+<div class="page" id="page-account">
+<div class="account-wrap" id="account-content"></div>
+</div>
+<!-- ── IMPRESSUM ── -->
+<div class="page" id="page-impressum">
+<div class="imprint-wrap">
+<div class="stitle">Impressum</div>
+<div class="imprint-wrap">
+<div class="imprint-text">
+<p>Diese Webseite ist ein privates Hobbyprojekt ohne kommerzielle Absichten.</p>
+<p>Kontakt: gamehub@example.com</p>
+</div>
+</div>
+
+<!-- Main App -->
+<meta id="gamehub-version" content="1778007528">
+</head>
+<body class="theme-neon">
+
+<!-- JavaScript -->
+<script src="langfix.js?v=1780244495"></script>
+<script src="config.js?v=1780244495"></script>
+<script src="auth.js?v=1780244495"></script>
+<script src="ui.js?v=1780244495"></script>
+<script src="social.js?v=1780244495"></script>
+<script src="lobby.js?v=1780244495"></script>
+<script src="ui2.js?v=1780244495"></script>
+<script src="snake.js?v=1780244495"></script>
+<script src="snakeclassic.js?v=1780244495"></script>
+<script src="pong.js?v=1780244495"></script>
+<script src="vier.js?v=1780244495"></script>
+<script src="battle.js?v=1780244495"></script>
+<script src="kniffel.js?v=1780244495"></script>
+<script src="pacman.js?v=1780244495"></script>
+<script src="main.js?v=1780244495"></script>
+
+
+</body>
+</html>
