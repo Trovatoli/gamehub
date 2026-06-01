@@ -1,3 +1,66 @@
+function _showGamePanel(page, el){
+  // Toggle: if same panel already open, close it
+  const existing = document.getElementById('game-panel-overlay');
+  if(existing && existing.dataset.page === page){
+    existing.remove();
+    return;
+  }
+  if(existing) existing.remove();
+
+  // Create overlay panel
+  const panel = document.createElement('div');
+  panel.id = 'game-panel-overlay';
+  panel.dataset.page = page;
+  panel.style.cssText = 'position:fixed;top:0;right:0;bottom:0;width:min(480px,90vw);background:var(--bg2,#0d0d24);border-left:2px solid var(--c1,#00f5ff);z-index:9999;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.6);';
+
+  // Header with close button
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg3,#0a0a1a);';
+  hdr.innerHTML = '<span style="font-weight:700;font-size:14px;color:var(--text)">'+getPageTitle(page)+'</span>';
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'background:rgba(255,255,255,.1);border:none;color:var(--text);font-size:18px;font-weight:900;cursor:pointer;border-radius:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-family:inherit;';
+  closeBtn.onclick = () => panel.remove();
+  hdr.appendChild(closeBtn);
+  panel.appendChild(hdr);
+
+  // Content: clone page content into panel
+  const content = document.createElement('div');
+  content.style.cssText = 'flex:1;overflow:auto;display:flex;flex-direction:column;';
+  const srcPage = document.getElementById('page-'+page);
+  if(srcPage){
+    // Move real page into panel
+    srcPage._panelOrigParent = srcPage.parentNode;
+    srcPage._panelOrigNext = srcPage.nextSibling;
+    srcPage.style.flex = '1';
+    srcPage.style.minHeight = '0';
+    srcPage.style.display = 'flex';
+    srcPage.classList.add('active');
+    content.appendChild(srcPage);
+  }
+  panel.appendChild(content);
+  document.body.appendChild(panel);
+
+  // Load page data
+  if(page==='chat'){try{renderDMList&&renderDMList();}catch(e){}}
+  if(page==='lobby'){try{loadLobbies();}catch(e){}}
+  if(page==='stats'){try{updateStats();}catch(e){}}
+
+  // Restore page when panel is removed
+  const observer = new MutationObserver(()=>{
+    if(!document.body.contains(panel)){
+      if(srcPage && srcPage._panelOrigParent){
+        srcPage.style.flex=''; srcPage.style.minHeight=''; srcPage.style.display='';
+        srcPage.classList.remove('active');
+        if(srcPage._panelOrigNext) srcPage._panelOrigParent.insertBefore(srcPage, srcPage._panelOrigNext);
+        else srcPage._panelOrigParent.appendChild(srcPage);
+      }
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.body, {childList:true});
+}
+
 function nav(page,el){
 document.getElementById('ingame-close-btn')?.remove();
 const _inGame=!!(currentGame);
@@ -9,12 +72,12 @@ if(currentActivePage&&currentActivePage.id==='page-'+page&&page!=='game'){
   if(_inGame){paused=false;document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-game').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));updateBackToGameBtn();return;}
   else{stopAll();document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-home').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));return;}
 }
-// Navigate away from game: pause (don't stop) so user can return
-if(page!=='game'&&_inGame){
-  paused=true;
-} else if(page!=='game'){
-  stopAll();
+// If in game: show requested page as a closeable overlay panel
+if(_inGame && page!=='game' && page!=='home'){
+  _showGamePanel(page, el);
+  return;
 }
+if(page!=='game') stopAll();
 document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 const p=document.getElementById('page-'+page);
