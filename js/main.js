@@ -373,3 +373,99 @@ if (_hasToken && currentUser) {
 gateHide();
 }
 });
+
+// ── Chat Panel Overlay ──────────────────────────────────────────
+let _cpoPanelOpen = false;
+let _cpoActiveFriend = null;
+
+function toggleChatPanel(el) {
+  const panel = document.getElementById('chat-panel-overlay');
+  if (!panel) return;
+  _cpoPanelOpen = !_cpoPanelOpen;
+  if (_cpoPanelOpen) {
+    panel.classList.add('open');
+    _renderCpoFriends();
+  } else {
+    panel.classList.remove('open');
+  }
+  // Update nav active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (_cpoPanelOpen && el) el.classList.add('active');
+}
+
+function closeChatPanel() {
+  const panel = document.getElementById('chat-panel-overlay');
+  if (panel) panel.classList.remove('open');
+  _cpoPanelOpen = false;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+}
+
+function _renderCpoFriends() {
+  const list = document.getElementById('cpo-friends-list');
+  if (!list) return;
+  list.innerHTML = '<div style="font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;">FREUNDE</div>';
+  const friends = friendsList || [];
+  if (!friends.length) {
+    list.innerHTML += '<div style="font-size:11px;color:var(--muted);">Keine Freunde</div>';
+    return;
+  }
+  friends.forEach(f => {
+    const btn = document.createElement('div');
+    btn.style.cssText = 'padding:6px 4px;cursor:pointer;border-radius:6px;font-size:12px;display:flex;align-items:center;gap:6px;';
+    btn.innerHTML = '<span style="width:8px;height:8px;border-radius:50%;background:'+(f.online?'#4ade80':'#555')+';flex-shrink:0;display:inline-block;"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(f.name||'?')+'</span>';
+    btn.onclick = () => _cpoOpenFriend(f.uid, f.name);
+    list.appendChild(btn);
+  });
+}
+
+function _cpoOpenFriend(uid, name) {
+  _cpoActiveFriend = uid;
+  const input = document.getElementById('cpo-input');
+  const sendBtn = document.getElementById('cpo-send-btn');
+  if (input) { input.disabled = false; input.placeholder = 'Nachricht an ' + name + '...'; input.focus(); }
+  if (sendBtn) sendBtn.disabled = false;
+  // Load DM history
+  const msgs = document.getElementById('cpo-msgs');
+  if (!msgs) return;
+  msgs.innerHTML = '<div style="color:var(--muted);font-size:11px;text-align:center;margin-bottom:8px;">' + name + '</div>';
+  try {
+    const dmKey = 'dms_' + [fbUser?.uid, uid].sort().join('_');
+    const stored = JSON.parse(localStorage.getItem(dmKey) || '[]');
+    stored.slice(-50).forEach(m => {
+      const own = m.from === fbUser?.uid;
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:4px 8px;border-radius:8px;font-size:12px;max-width:80%;word-break:break-word;' + (own ? 'background:var(--c1,#00f5ff);color:#000;align-self:flex-end;' : 'background:var(--bg3,#1a1a3a);align-self:flex-start;');
+      div.textContent = m.text;
+      msgs.appendChild(div);
+    });
+    msgs.scrollTop = msgs.scrollHeight;
+  } catch(e) {}
+}
+
+function sendCpoMsg() {
+  if (!_cpoActiveFriend) return;
+  const input = document.getElementById('cpo-input');
+  const text = input?.value?.trim();
+  if (!text) return;
+  input.value = '';
+  // Add to UI
+  const msgs = document.getElementById('cpo-msgs');
+  if (msgs) {
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:4px 8px;border-radius:8px;font-size:12px;max-width:80%;word-break:break-word;background:var(--c1,#00f5ff);color:#000;align-self:flex-end;';
+    div.textContent = text;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  // Send via WS
+  if (socialWs && socialWs.readyState === 1) {
+    socialWs.send(JSON.stringify({type:'dm', to: _cpoActiveFriend, text, from: fbUser?.uid, fromName: currentUser?.name || fbUser?.name || 'Du'}));
+  }
+  // Save locally
+  try {
+    const dmKey = 'dms_' + [fbUser?.uid, _cpoActiveFriend].sort().join('_');
+    const stored = JSON.parse(localStorage.getItem(dmKey) || '[]');
+    stored.push({from: fbUser?.uid, text, ts: Date.now()});
+    localStorage.setItem(dmKey, JSON.stringify(stored.slice(-200)));
+  } catch(e) {}
+}
