@@ -12,7 +12,7 @@ const total=parseInt(localStorage.getItem('gh_total')||'0');
 if(Object.keys(saved).length>0){currentUser.scores=saved;}
 if(total>0){currentUser.total=total;}
 }catch(ex){}
-document.getElementById('stat-pts').textContent=(currentUser.total||0).toLocaleString();
+const _sp=document.getElementById('stat-pts');if(_sp)_sp.textContent=(currentUser.total||0).toLocaleString();
 // Update avatar everywhere
 const ava2=currentUser.avatar||currentUser.name.slice(0,2).toUpperCase();
 const isEmoji2=currentUser.avatar&&currentUser.avatar.length<=2;
@@ -23,8 +23,8 @@ const scores=currentUser.scores||{};
 const gameNames=({snake:'🐍 '+t('game.snake'),pong:'🏓 '+t('game.pong'),vier:'🔴 '+t('game.vier'),battle:'🚢 '+t('game.battle'),kniffel:'🎲 '+t('game.kniffel')});
 const best=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
 if(best){
-document.getElementById('stat-best-game').textContent=gameNames[best[0]]||best[0];
-document.getElementById('stat-best-pts').textContent=best[1]+' Pts';
+const _sbg=document.getElementById('stat-best-game');if(_sbg)_sbg.textContent=gameNames[best[0]]||best[0];
+const _sbp=document.getElementById('stat-best-pts');if(_sbp)_sbp.textContent=best[1]+' Pts';
 }
 // Friends count
 const fEl=document.getElementById('stat-friends');
