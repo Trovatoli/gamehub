@@ -64,6 +64,7 @@ function _showGamePanel(page, el){
 function nav(page,el){
 document.getElementById('ingame-close-btn')?.remove();
 const _inGame=!!(currentGame);
+console.log('[NAV] page='+page+' _inGame='+_inGame+' currentGame='+!!currentGame);
 const _gameWasActive=document.getElementById('page-game')?.classList.contains('active');
 // Toggle: if already on this page, close it
 const currentActivePage=document.querySelector('.page.active');
