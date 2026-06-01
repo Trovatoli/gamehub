@@ -257,9 +257,9 @@ nav::-webkit-scrollbar{width:0}
 /* ── INGAME CHAT ─────────────────────────────── */
 .igchat{position:fixed;bottom:16px;right:16px;width:260px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.5);z-index:200;display:none;flex-direction:column;overflow:hidden}
 .igchat.show{display:flex}
-.igchat-hdr{padding:9px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);cursor:pointer;flex-shrink:0}
+.igchat-hdr{padding:9px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);cursor:pointer;flex-shrink:0;user-select:none;}
 .igchat-title{font-size:11px;font-weight:700;color:var(--c1)}
-.igchat-x{font-size:16px;color:var(--muted);cursor:pointer;line-height:1;padding:0 2px}
+.igchat-x{font-size:20px;color:var(--text);cursor:pointer;line-height:1;padding:2px 6px;background:rgba(255,255,255,.1);border-radius:4px;font-weight:700;}
 .igchat-msgs{height:150px;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:6px}
 .igchat-msgs::-webkit-scrollbar{width:3px}
 .igchat-msgs::-webkit-scrollbar-thumb{background:var(--border)}
