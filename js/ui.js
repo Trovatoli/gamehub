@@ -12,89 +12,17 @@ stopAll();
 // If returning to game, unpause
 if(page==='game'&&currentGame)paused=false;
 document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-if(page==='game'||(wasInGame&&currentGame&&page!=='home')){
-// Keep game page visible, show target as overlay if not game
+if(page==='game'&&currentGame){
+// Return to running game
 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 document.getElementById('page-game')?.classList.add('active');
-if(page!=='game'){
-// Show non-game page as floating overlay
-// Toggle: if this page already open in overlay, close it
-let overlay=document.getElementById('nav-overlay');
-if(overlay&&overlay._activePage===page){nav('game');return;}
-if(!overlay){
-overlay=document.createElement('div');
-overlay.id='nav-overlay';
-overlay.style.cssText='position:fixed;top:0;right:0;bottom:0;width:min(420px,80vw);background:var(--bg2,var(--bg));border-left:1px solid var(--border);z-index:100;display:flex;flex-direction:column;overflow:hidden;box-shadow:-4px 0 20px rgba(0,0,0,.4);';
-document.body.appendChild(overlay);
-}
-const targetPage=document.getElementById('page-'+page);
-if(targetPage){
-// Clear overlay but keep close button
-overlay.innerHTML='';
-const closeBtn=document.createElement('div');
-closeBtn.style.cssText='padding:10px 16px;cursor:pointer;font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);font-weight:700;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;';
-closeBtn.innerHTML='<span>'+t('game.back.short')+'</span><span style="font-size:18px;line-height:1">✕</span>';
-closeBtn.onclick=()=>nav('game');
-overlay.appendChild(closeBtn);
-// ESC key closes overlay
-const _escClose=(e)=>{if(e.key==='Escape'){nav('game');document.removeEventListener('keydown',_escClose);}};
-document.addEventListener('keydown',_escClose);
-// Move REAL page element into overlay (keeps all JS/events working)
-targetPage._origParent=targetPage.parentNode;
-targetPage._origNextSibling=targetPage.nextSibling;
-targetPage.style.flex='1';
-targetPage.style.minHeight='0';
-targetPage.style.display='flex';
-targetPage.classList.add('active');
-overlay.appendChild(targetPage);
-overlay.style.display='flex';
-overlay._activePage=page;
-// Init page content
-if(page==='account'){try{renderAccount();loadFriendRequests();}catch(e){}}
-if(page==='lobby'){try{loadLobbies();}catch(e){}}
-if(page==='stats'){try{updateStats();}catch(e){}}
-if(page==='chat'){try{renderDMList&&renderDMList();}catch(e){}}
-}
-} else {
-// Returning to game - move page back and close overlay
-const ol=document.getElementById('nav-overlay');
-if(ol){
-// Move page back to original parent
-const activePage=ol._activePage;
-if(activePage){
-const pg=document.getElementById('page-'+activePage);
-if(pg&&pg._origParent){
-pg.classList.remove('active');
-pg.style.flex='';
-pg.style.minHeight='';
-pg.style.display='';
-if(pg._origNextSibling)pg._origParent.insertBefore(pg,pg._origNextSibling);
-else pg._origParent.appendChild(pg);
-}
-}
-ol.remove();
-}
 paused=false;
-}
 } else {
 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 const p=document.getElementById('page-'+page);
 if(p)p.classList.add('active');
-// Restore any page from overlay back to original parent before removing overlay
 const ol=document.getElementById('nav-overlay');
-if(ol){
-const activePage=ol._activePage;
-if(activePage){
-const pg=document.getElementById('page-'+activePage);
-if(pg&&pg._origParent){
-pg.classList.remove('active');
-pg.style.flex='';pg.style.minHeight='';pg.style.display='';
-if(pg._origNextSibling)pg._origParent.insertBefore(pg,pg._origNextSibling);
-else pg._origParent.appendChild(pg);
-}
-}
-ol.remove();
-}
+if(ol)ol.remove();
 }
 document.getElementById('page-title').textContent=getPageTitle(page);
 if(el)el.classList.add('active');
