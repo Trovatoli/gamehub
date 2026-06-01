@@ -1,4 +1,12 @@
 function nav(page,el){
+// Toggle: clicking the same active page closes it
+const _activePg=document.querySelector('.page.active');
+if(_activePg&&_activePg.id==='page-'+page&&page!=='game'&&page!=='home'){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(currentGame){paused=false;document.getElementById('page-game').classList.add('active');updateBackToGameBtn();}
+  return;
+}
 // If navigating away from game but game is still running, just pause (don't stop)
 const wasInGame=document.getElementById('page-game')?.classList.contains('active');
 if(page!=='game'&&page!=='premenu'){
