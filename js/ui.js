@@ -75,8 +75,21 @@ paused=false;
 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 const p=document.getElementById('page-'+page);
 if(p)p.classList.add('active');
+// Restore any page from overlay back to original parent before removing overlay
 const ol=document.getElementById('nav-overlay');
-if(ol)ol.remove();
+if(ol){
+const activePage=ol._activePage;
+if(activePage){
+const pg=document.getElementById('page-'+activePage);
+if(pg&&pg._origParent){
+pg.classList.remove('active');
+pg.style.flex='';pg.style.minHeight='';pg.style.display='';
+if(pg._origNextSibling)pg._origParent.insertBefore(pg,pg._origNextSibling);
+else pg._origParent.appendChild(pg);
+}
+}
+ol.remove();
+}
 }
 document.getElementById('page-title').textContent=getPageTitle(page);
 if(el)el.classList.add('active');
