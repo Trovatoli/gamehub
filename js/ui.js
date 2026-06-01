@@ -18,7 +18,9 @@ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 document.getElementById('page-game')?.classList.add('active');
 if(page!=='game'){
 // Show non-game page as floating overlay
+// Toggle: if this page already open in overlay, close it
 let overlay=document.getElementById('nav-overlay');
+if(overlay&&overlay._activePage===page){nav('game');return;}
 if(!overlay){
 overlay=document.createElement('div');
 overlay.id='nav-overlay';
@@ -30,10 +32,13 @@ if(targetPage){
 // Clear overlay but keep close button
 overlay.innerHTML='';
 const closeBtn=document.createElement('div');
-closeBtn.innerHTML=t('lobby.close.back');
-closeBtn.style.cssText='padding:10px 16px;cursor:pointer;font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);font-weight:700;flex-shrink:0;';
+closeBtn.style.cssText='padding:10px 16px;cursor:pointer;font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);font-weight:700;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;';
+closeBtn.innerHTML='<span>'+t('game.back.short')+'</span><span style="font-size:18px;line-height:1">✕</span>';
 closeBtn.onclick=()=>nav('game');
 overlay.appendChild(closeBtn);
+// ESC key closes overlay
+const _escClose=(e)=>{if(e.key==='Escape'){nav('game');document.removeEventListener('keydown',_escClose);}};
+document.addEventListener('keydown',_escClose);
 // Move REAL page element into overlay (keeps all JS/events working)
 targetPage._origParent=targetPage.parentNode;
 targetPage._origNextSibling=targetPage.nextSibling;
