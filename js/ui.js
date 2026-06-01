@@ -1,29 +1,12 @@
 function nav(page,el){
-// If navigating away from game but game is still running, just pause (don't stop)
-const wasInGame=document.getElementById('page-game')?.classList.contains('active');
-if(page!=='game'&&page!=='premenu'){
-if(wasInGame&&currentGame&&page!=='home'){
-// Pause game without stopping it
-paused=true;
-} else {
-stopAll();
-}
-}
-// If returning to game, unpause
-if(page==='game'&&currentGame)paused=false;
+// Remove any ingame close button
+document.getElementById('ingame-close-btn')?.remove();
+// Always stop game when navigating away
+if(page!=='game')stopAll();
 document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-if(page==='game'&&currentGame){
-// Return to running game
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.getElementById('page-game')?.classList.add('active');
-paused=false;
-} else {
 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 const p=document.getElementById('page-'+page);
 if(p)p.classList.add('active');
-const ol=document.getElementById('nav-overlay');
-if(ol)ol.remove();
-}
 document.getElementById('page-title').textContent=getPageTitle(page);
 if(el)el.classList.add('active');
 if(page!=='game')document.getElementById('igchat').classList.remove('show');
