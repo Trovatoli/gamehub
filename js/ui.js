@@ -8,6 +8,13 @@ if(inGame&&currentGame&&page==='chat'){
 }
 // Always stop game when navigating away
 if(page!=='game')stopAll();
+// Toggle: if already on this page, go back
+const currentActivePage=document.querySelector('.page.active');
+if(currentActivePage&&currentActivePage.id==='page-'+page){
+  if(currentGame)nav('game');
+  else nav('home');
+  return;
+}
 document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 const p=document.getElementById('page-'+page);
