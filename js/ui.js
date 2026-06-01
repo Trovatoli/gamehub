@@ -66,12 +66,20 @@ document.getElementById('ingame-close-btn')?.remove();
 const _inGame=!!(currentGame);
 console.log('[NAV] page='+page+' _inGame='+_inGame+' currentGame='+!!currentGame);
 const _gameWasActive=document.getElementById('page-game')?.classList.contains('active');
-// Toggle: if already on this page, close it
+// Toggle: if already on this page, close it (NO recursive nav call!)
 const currentActivePage=document.querySelector('.page.active');
 if(currentActivePage&&currentActivePage.id==='page-'+page&&page!=='game'){
-  // Close: go back to game if running, else home
-  if(_inGame){paused=false;document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-game').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));updateBackToGameBtn();return;}
-  else{stopAll();document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-home').classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));return;}
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(_inGame){
+    paused=false;
+    document.getElementById('page-game').classList.add('active');
+    updateBackToGameBtn();
+  } else {
+    stopAll();
+    document.getElementById('page-home').classList.add('active');
+  }
+  return;
 }
 // If in game: show requested page as a closeable overlay panel
 if(_inGame && page!=='game' && page!=='home'){
