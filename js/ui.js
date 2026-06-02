@@ -105,6 +105,9 @@ const ol=document.getElementById('nav-overlay');
 if(ol)ol.remove();
 }
 document.getElementById('page-title').textContent=getPageTitle(page);
+// Show/hide topbar back button
+const _tbBtn=document.getElementById('topbar-game-back');
+if(_tbBtn)_tbBtn.style.display=(currentGame&&page!=='game')?'block':'none';
 if(el)el.classList.add('active');
 if(page!=='game')document.getElementById('igchat').classList.remove('show');
 if(page==='account'){renderAccount();loadFriendRequests();setTimeout(renderFriendsSidebar,100);}
