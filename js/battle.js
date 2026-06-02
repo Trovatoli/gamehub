@@ -380,7 +380,7 @@ window._battlePhase='p1';_activePhase='p1_shooting';
 _activeShooter=1;pTurn=!!opts.isHost;
 showToast(t('battle.start.toast')+(opts.isHost?t('battle.your.turn2'):t('battle.host.first')));
 document.getElementById('g-status').textContent=
-opts.isHost?'🎯 Du bist dran! Klicke auf das rechte Feld!':'⏳ Warte auf Host...';
+opts.isHost?(currentLang==='en'?'🎯 Your turn! Click the right field!':t('game.your.turn')):(currentLang==='en'?'⏳ Waiting for host...':t('game.wait.host'));
 setTimeout(draw,100);
 },1500);
 } else if(vsAI&&_activePhase==='p1_placing'){
