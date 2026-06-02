@@ -336,6 +336,10 @@ Object.keys(res.scores||{}).forEach(g=>{if((res.scores[g]||0)>(mergedScores[g]||
 currentUser = { ...fbUser, scores: mergedScores, total: bestTotal };
 localStorage.setItem('gh_total',String(bestTotal));
 localStorage.setItem('gh_scores',JSON.stringify(mergedScores));
+// Push local total to server if it's higher
+if(bestTotal>serverTotal&&fbToken){
+  apiCall('scores','POST',{syncTotal:bestTotal,syncScores:mergedScores}).catch(()=>{});
+}
 try { localStorage.setItem('ghToken', fbToken); localStorage.setItem('ghUser', JSON.stringify({...fbUser,scores:mergedScores,total:bestTotal})); } catch(e) {}
 updateUserUI();
 return { ok: true };
