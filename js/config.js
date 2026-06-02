@@ -136,7 +136,16 @@ de:{
 'points.suffix':' Punkte',
 'nav.back':'← Zurück','auth.not.logged.in':'Nicht eingeloggt','auth.click.login':'Klick zum Login','game.back.short':'Zurück zum Spiel',
 },
+'vier.your.turn':'🔵 Dein Zug','vier.ai.thinking':'🟡 KI denkt...','vier.opp.turn':'⏳ {opp} ist dran',
+'vier.p.turn':'{name} ist dran','game.ready':'Bereit','game.wait':'Warte...','game.your.turn':'Du bist dran! Klicke auf das rechte Feld!',
+'game.wait.host':'⏳ Warte auf Host...','battle.roll':'🎲 Würfelt...','kniffel.hold.hint':'Würfel anklicken zum Festhalten',
+'kniffel.turn':' ist dran — Wurf ','kniffel.held':' gehalten',
 en:{
+'vier.your.turn':'🔵 Your Turn','vier.ai.thinking':'🟡 AI thinking...','vier.opp.turn':'⏳ {opp}\'s turn',
+'vier.p.turn':'{name}\'s turn','game.ready':'Ready','game.wait':'Wait...','game.your.turn':'Your turn! Click the right field!',
+'game.wait.host':'⏳ Waiting for host...','battle.roll':'🎲 Rolling...','kniffel.hold.hint':'Click dice to hold',
+'kniffel.turn':' is up — Roll ','kniffel.held':' held',
+
 // Navigation
 'nav.games':'Games','nav.lobby':'Lobby','nav.chat':'Chat',
 'nav.stats':'Statistics','nav.settings':'Settings','nav.impressum':'Imprint',
