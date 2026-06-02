@@ -469,3 +469,15 @@ function sendCpoMsg() {
     localStorage.setItem(dmKey, JSON.stringify(stored.slice(-200)));
   } catch(e) {}
 }
+
+// ── Auth Gate: Language + Theme toggles ─────────────────────────
+const _gateThemes = ['neon', 'light', 'retro'];
+const _gateThemeNames = { 'neon': '🌟 Neon', 'light': '☀ Hell', 'retro': '💾 Retro' };
+
+function gateToggleTheme() {
+  const cur = (()=>{ try { return localStorage.getItem('ghtheme')||'neon'; } catch(e){ return 'neon'; } })();
+  const next = _gateThemes[(_gateThemes.indexOf(cur) + 1) % _gateThemes.length];
+  if (typeof setTheme === 'function') setTheme(next);
+  const btn = document.getElementById('gate-theme-btn');
+  if (btn) btn.textContent = '🎨 ' + (_gateThemeNames[next] || next);
+}
