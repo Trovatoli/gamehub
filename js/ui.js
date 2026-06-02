@@ -161,7 +161,7 @@ const ca=document.getElementById('canvas-area');
 if(ca) ca.querySelectorAll('div:not(#kniffel-ui):not(.pause-overlay):not(#settings-overlay)').forEach(el=>el.remove());
 const names=({snake:t('game.snake'),pong:t('game.pong'),vier:t('game.vier'),battle:t('game.battle'),kniffel:t('game.kniffel')});
 document.getElementById('g-title').textContent=names[type]||type;
-document.getElementById('g-status').textContent='Bereit';
+document.getElementById('g-status').textContent=t('game.ready')||'Bereit';
 // Hide restart button in online mode
 const restartBtn=document.querySelector('.ctrl-btn[onclick="restartGame()"]');
 if(restartBtn)restartBtn.style.display=(lastGameOpts&&lastGameOpts.isOnline)?'none':'';
