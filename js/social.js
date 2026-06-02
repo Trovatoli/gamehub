@@ -456,92 +456,52 @@ status.appendChild(cancelBtn);
 });
 }
 
-function showGameInvite(fromUid,fromName,game,roomId){
-const gameNames={snake:'🐍 Snake',pong:'🏓 Pong',vier:'🔴 4 Gewinnt',battle:'🚢 Schiffe versenken'};
-// Remove old invite if exists
-document.getElementById('game-invite-banner')?.remove();
-const invBanner=document.createElement('div');
-invBanner.id='game-invite-banner';
-invBanner.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d0d18;border:2px solid var(--c1);color:#fff;padding:16px 22px;border-radius:14px;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;box-shadow:0 0 30px rgba(0,245,255,.4);animation:fadeUp .3s ease;min-width:300px;';
-invBanner.innerHTML='<span>🎮 <b>'+fromName+'</b> lädt ein: '+( gameNames[game]||game)+'</span>';
+function showGameInvite(fromUid, fromName, game, roomId){
+  document.getElementById('game-invite-banner')?.remove();
+  const gameNames = {snake:'🐍 Snake', pong:'🏓 Pong', vier:'🔴 4 Gewinnt', battle:'🚢 Schiffe versenken', kniffel:'🎲 Kniffel'};
+  const banner = document.createElement('div');
+  banner.id = 'game-invite-banner';
+  banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d0d18;border:2px solid var(--c1);color:#fff;padding:16px 20px;border-radius:14px;font-size:14px;z-index:99999;display:flex;flex-direction:column;gap:10px;box-shadow:0 0 30px rgba(0,245,255,.4);min-width:280px;max-width:90vw;';
 
-const ctrls={snake:['Pfeiltasten','WASD'],pong:['Maus','W/S Tasten','Pfeiltasten'],vier:[],battle:[],kniffel:[]};
-const gameCtrls=ctrls[game]||[];
-let guestCtrl=gameCtrls[0]||'Maus';
+  const title = document.createElement('div');
+  title.innerHTML = '🎮 <b>' + fromName + '</b> lädt ein: ' + (gameNames[game] || game);
+  banner.appendChild(title);
 
-// Ctrl picker for guest
-if(gameCtrls.length){
-const ctrlPicker=document.createElement('div');
-ctrlPicker.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px';
-ctrlPicker.innerHTML='<span style="font-size:11px;color:var(--muted);width:100%;margin-bottom:2px">'+t('lobby.ctrl.hint')+'</span>'
-+gameCtrls.map(c=>'<button data-c="'+c+'" style="padding:4px 10px;border-radius:6px;border:1.5px solid '+(c===guestCtrl?'var(--c1)':'var(--border)')+';background:'+(c===guestCtrl?'rgba(0,245,255,.08)':'transparent')+';color:'+(c===guestCtrl?'var(--c1)':'var(--muted)')+';cursor:pointer;font-family:inherit;font-size:11px">'+c+'</button>').join('');
-ctrlPicker.querySelectorAll('[data-c]').forEach(b=>{
-b.addEventListener('click',()=>{
-guestCtrl=b.dataset.c;
-ctrlPicker.querySelectorAll('[data-c]').forEach(x=>{
-x.style.borderColor=x.dataset.c===guestCtrl?'var(--c1)':'var(--border)';
-x.style.color=x.dataset.c===guestCtrl?'var(--c1)':'var(--muted)';
-x.style.background=x.dataset.c===guestCtrl?'rgba(0,245,255,.08)':'transparent';
-});
-});
-});
-invBanner.insertBefore(ctrlPicker,invBanner.querySelector('button'));
+  const btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;gap:8px;';
+
+  const acceptBtn = document.createElement('button');
+  acceptBtn.textContent = t('lobby.join.btn') || 'Annehmen';
+  acceptBtn.style.cssText = 'flex:1;padding:8px 14px;background:var(--c1);color:#000;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px;';
+  acceptBtn.onclick = async () => {
+    banner.remove();
+    const joinRes = await apiCall('rooms/' + roomId + '/join', 'POST', {});
+    if(joinRes && !joinRes.error){
+      startGame(game, {
+        diff:'medium', ctrl:'Maus', mode:'Online',
+        onlineRole:'guest', onlineRoomId:roomId,
+        opponentName:fromName,
+        players:[{name:fromName,type:'online',color:1},{name:fbUser?.name||'Du',type:'human',color:0}],
+        isOnline:true, isHost:false
+      });
+    } else {
+      showToast((t('error.generic')||'Fehler') + ': ' + (joinRes?.error || t('error.room.unavailable') || 'Nicht verfügbar'));
+    }
+  };
+
+  const declineBtn = document.createElement('button');
+  declineBtn.textContent = '✕';
+  declineBtn.style.cssText = 'padding:8px 12px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer;font-family:inherit;';
+  declineBtn.onclick = () => banner.remove();
+
+  btns.appendChild(acceptBtn);
+  btns.appendChild(declineBtn);
+  banner.appendChild(btns);
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 20000);
 }
 
-const acceptBtn=document.createElement('button');
-acceptBtn.textContent=t('lobby.join.btn');
-acceptBtn.style.cssText='padding:6px 14px;background:var(--c1);color:#000;border:none;border-radius:6px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px';
-acceptBtn.addEventListener('click',async()=>{
-invBanner.remove();
-const joinRes=await apiCall('rooms/'+roomId+'/join','POST',{});
-if(joinRes&&!joinRes.error){
-startGame(game,{
-diff:'medium',ctrl:guestCtrl,mode:'Online',
-onlineRole:'guest',onlineRoomId:roomId,
-opponentName:fromName,
-players:[{name:fromName,type:'online',color:1},{name:fbUser?.name||'Du',type:'human',color:0}],
-isOnline:true,isHost:false
-});
-} else {
-showToast(t('error.generic')+': '+(joinRes?.error||t('error.room.unavailable')));
-}
-});
 
-const declineBtn=document.createElement('button');
-declineBtn.textContent='×';
-declineBtn.style.cssText='padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:inherit';
-declineBtn.addEventListener('click',()=>invBanner.remove());
-
-invBanner.appendChild(acceptBtn);
-invBanner.appendChild(declineBtn);
-document.body.appendChild(invBanner);
-setTimeout(()=>invBanner.remove(),20000);
-}
-
-// Wire search input
-document.addEventListener('DOMContentLoaded',()=>{
-const si=document.getElementById('search-input');
-if(si){
-let searchTimer=null;
-si.addEventListener('input',()=>{
-clearTimeout(searchTimer);
-const q=si.value.trim();
-if(q.length<2){document.getElementById('search-results').innerHTML='';return;}
-searchTimer=setTimeout(async()=>{
-// Use HTTP for search (works without WS)
-if(!fbUser){showToast(t('auth.need.login'));return;}
-const res=await apiCall('users/search?q='+encodeURIComponent(q),'GET');
-if(res&&res.results)renderSearchResults(res.results);
-},300);
-});
-}
-// Wire friend requests display in chat
-renderFriendRequests();
-});
-
-// ════════════════════════════════════════════════
-// INGAME CHAT
-// ════════════════════════════════════════════════
 function toggleIgChat(){document.getElementById('igchat').classList.toggle('show');}
 
 function igChatAddMsg(from,txt,own){
