@@ -550,9 +550,9 @@ btn.addEventListener('click',()=>{lsCtrl=btn.dataset.ctrl;renderLobbySelect();})
 // Wire diff buttons
 lsCard?.querySelectorAll('.ls-diff-btn:not([data-ctrl-btn])').forEach(btn=>{
 btn.addEventListener('click',()=>{
-const t=btn.textContent;
-if(t.includes(t('lobby.diff.easy'))||t.includes('Easy'))lsDiff='easy';
-else if(t.includes(t('lobby.diff.hard'))||t.includes('Hard'))lsDiff='hard';
+const btnText=btn.textContent;
+if(btnText.includes(t('lobby.diff.easy'))||btnText.includes('Easy'))lsDiff='easy';
+else if(btnText.includes(t('lobby.diff.hard'))||btnText.includes('Hard'))lsDiff='hard';
 else lsDiff='medium';
 renderLobbySelect();
 });
