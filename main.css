@@ -17,7 +17,7 @@ td[title]:hover::after{content:attr(title);position:fixed;background:#0d0d18;bor
 body.theme-retro{--bg:#000a00;--bg2:#001200;--bg3:#001800;--card:#000f00;--card2:#001500;--c1:#00ff41;--c2:#00cc33;--c3:#00ff41;--c4:#00ff41;--text:#00ff41;--muted:#005510;--border:#003300;}
 
 /* ── LAYOUT ──────────────────────────────────── */
-.app{display:flex;height:100vh}
+.app{display:flex;height:100vh;overflow:hidden}
 
 /* ── SIDEBAR ─────────────────────────────────── */
 .sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;height:100vh;position:sticky;top:0}
@@ -53,7 +53,7 @@ nav::-webkit-scrollbar{width:0}
 .dot-away{background:#f59e0b;box-shadow:0 0 6px #f59e0b}
 
 /* ── MAIN ────────────────────────────────────── */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;position:relative}
 .topbar{padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);flex-shrink:0;height:46px}
 .page-title{font-size:14px;font-weight:800;color:var(--text);letter-spacing:.3px}
 .topbar-right{display:flex;align-items:center;gap:10px}
