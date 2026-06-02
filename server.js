@@ -636,7 +636,8 @@ function handleAPI(pathname, method, body, req, res) {
     if(!user) return sendJSON(401,{error:'Nicht eingeloggt'});
     const {game,score}=body;
     if(!user.scores[game]||score>user.scores[game]) user.scores[game]=score;
-    user.total=Object.values(user.scores).reduce((a,b)=>a+b,0);
+    // Cumulative total: add score to running total
+    user.total=(user.total||0)+score;
     saveData(data);
     return sendJSON(200,{ok:true,scores:user.scores,total:user.total});
   }
