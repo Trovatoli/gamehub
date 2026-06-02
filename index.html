@@ -380,5 +380,30 @@ style="width:100%;background:var(--bg3);border:1px solid var(--border);border-ra
   </div>
 </div>
 
+
+<script>
+function gateToggleLang(){
+  var newLang=currentLang==='de'?'en':'de';
+  currentLang=newLang;
+  try{localStorage.setItem('ghlang',newLang);}catch(e){}
+  var btn=document.getElementById('gate-lang-btn');
+  if(btn)btn.textContent='🌐 '+newLang.toUpperCase();
+  var sub=document.getElementById('gate-subtitle');
+  if(sub)sub.textContent=newLang==='en'?'Log in or create an account':'Einloggen oder Account erstellen';
+  var tl=document.getElementById('gate-tab-login');if(tl)tl.textContent=newLang==='en'?'Log in':'Einloggen';
+  var tr=document.getElementById('gate-tab-register');if(tr)tr.textContent=newLang==='en'?'Register':'Registrieren';
+  var bl=document.getElementById('gate-btn-login');if(bl)bl.textContent=newLang==='en'?'Log in':'Einloggen';
+  var br=document.getElementById('gate-btn-register');if(br)br.textContent=newLang==='en'?'Create Account':'Account erstellen';
+}
+var _gThemes=['neon','light','retro'];
+var _gThemeNames={neon:'🌟 Neon',light:'☀ Hell',retro:'💾 Retro'};
+function gateToggleTheme(){
+  var cur;try{cur=localStorage.getItem('ghtheme')||'neon';}catch(e){cur='neon';}
+  var next=_gThemes[(_gThemes.indexOf(cur)+1)%_gThemes.length];
+  if(typeof setTheme==='function')setTheme(next);
+  var btn=document.getElementById('gate-theme-btn');
+  if(btn)btn.textContent=_gThemeNames[next]||next;
+}
+</script>
 </body>
 </html>
