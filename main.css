@@ -17,10 +17,10 @@ td[title]:hover::after{content:attr(title);position:fixed;background:#0d0d18;bor
 body.theme-retro{--bg:#000a00;--bg2:#001200;--bg3:#001800;--card:#000f00;--card2:#001500;--c1:#00ff41;--c2:#00cc33;--c3:#00ff41;--c4:#00ff41;--text:#00ff41;--muted:#005510;--border:#003300;}
 
 /* ── LAYOUT ──────────────────────────────────── */
-.app{display:flex;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh}
 
 /* ── SIDEBAR ─────────────────────────────────── */
-.sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;height:100vh;position:sticky;top:0}
+.sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
 .logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
 .logo-name{font-size:19px;font-weight:900;letter-spacing:2px;background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .logo-tag{font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:1px}
@@ -43,7 +43,7 @@ nav::-webkit-scrollbar{width:0}
 .av-r{background:rgba(255,64,129,.12);color:var(--c3);border-color:rgba(255,64,129,.3)}
 .su-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .su-pts{font-size:10px;color:var(--muted)}
-.online-section{padding:8px 12px 10px;border-top:1px solid var(--border);overflow:hidden;flex-shrink:0;}
+.online-section{padding:8px 12px 10px;border-top:1px solid var(--border)}
 .online-hdr{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;font-weight:700}
 .friend{display:flex;align-items:center;gap:8px;padding:4px 2px;border-radius:6px;cursor:pointer;transition:background .15s}
 .friend:hover{background:var(--bg3)}
@@ -53,7 +53,7 @@ nav::-webkit-scrollbar{width:0}
 .dot-away{background:#f59e0b;box-shadow:0 0 6px #f59e0b}
 
 /* ── MAIN ────────────────────────────────────── */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;position:relative}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
 .topbar{padding:10px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);flex-shrink:0;height:46px}
 .page-title{font-size:14px;font-weight:800;color:var(--text);letter-spacing:.3px}
 .topbar-right{display:flex;align-items:center;gap:10px}
@@ -62,10 +62,10 @@ nav::-webkit-scrollbar{width:0}
 .icon-btn:hover{border-color:var(--c1);color:var(--c1)}
 
 /* ── CONTENT ─────────────────────────────────── */
-.page{display:none !important;flex:1;overflow-y:auto;padding:20px}
+.page{display:none;flex:1;overflow-y:auto;padding:20px}
 .page::-webkit-scrollbar{width:4px}
 .page::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.page.active{display:flex !important;flex-direction:column}
+.page.active{display:flex;flex-direction:column}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .page.active{animation:fadeUp .2s ease}
 
@@ -357,11 +357,4 @@ font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px
 .auth-gate-msg.err{background:rgba(255,80,80,.15);border:1px solid rgba(255,80,80,.3);color:#f87171;}
 .auth-gate-footer{text-align:center;font-size:10px;color:#3a3a5a;margin-top:14px;}
 
-#friends-list{overflow-y:auto;flex:1;min-height:0;}
-.sidebar nav{flex:1;overflow-y:auto;padding-bottom:4px;}
-
-#page-chat:not(.active),#page-stats:not(.active),#page-lobby:not(.active),#page-settings:not(.active),#page-account:not(.active),#page-impressum:not(.active){display:none !important;}
-
 /* Chat slide panel - hidden by default */
-#chat-slide-panel { position:fixed;top:0;right:-520px;bottom:0;width:min(460px,88vw);background:var(--bg2,#0d0d24);border-left:2px solid var(--c1);z-index:9000;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.7);transition:right .22s ease; }
-#chat-slide-panel.open { right:0; }
