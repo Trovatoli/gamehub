@@ -85,7 +85,7 @@
 <div class="nav-item" onclick="nav('stats',this)"><span class="nav-icon">📊</span>Statistik</div>
 <div class="nav-group">Einstellungen</div>
 <div class="nav-item" onclick="nav('settings',this)"><span class="nav-icon">⚙</span>Einstellungen</div>
-<div class="nav-item" onclick="nav('impressum',this)"><span class="nav-icon">📄</span>Impressum</div>
+<div class="nav-item" onclick="nav('impressum',this);setTimeout(function(){renderImpressum&&renderImpressum();},10)"><span class="nav-icon">📄</span>Impressum</div>
 </nav>
 <div class="online-section" id="friends-section">
 <div id="friend-requests-section" style="display:none;margin-bottom:8px"></div>
@@ -474,6 +474,22 @@ function renderImpressum(){
       '<div style="border-top:1px solid var(--border);padding-top:12px;color:var(--muted);font-size:12px">© 2026 GameHub · '+(en?'All rights reserved':'Alle Rechte vorbehalten')+'</div>'+
     '</div>';
 }
+</script>
+
+<script>
+// Auto-render impressum when its page becomes active
+(function(){
+  var _obs = new MutationObserver(function(){
+    var pg = document.getElementById('page-impressum');
+    if(pg && pg.classList.contains('active')){
+      if(typeof renderImpressum === 'function') renderImpressum();
+    }
+  });
+  document.addEventListener('DOMContentLoaded', function(){
+    var pg = document.getElementById('page-impressum');
+    if(pg) _obs.observe(pg, {attributes:true, attributeFilter:['class']});
+  });
+})();
 </script>
 </body>
 </html>
