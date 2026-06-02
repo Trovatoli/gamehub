@@ -1,4 +1,7 @@
 function initSnakeClassic(opts){
+// Solo mode: hide KI score chip
+const _chip=document.getElementById('s2-chip');
+if(_chip)_chip.style.display='none';
 const C=document.getElementById('gc');
 const area=document.getElementById('canvas-area');
 const AW=area?area.clientWidth:500;
