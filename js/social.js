@@ -460,10 +460,10 @@ function showGameInvite(fromUid,fromName,game,roomId){
 const gameNames={snake:'🐍 Snake',pong:'🏓 Pong',vier:'🔴 4 Gewinnt',battle:'🚢 Schiffe versenken'};
 // Remove old invite if exists
 document.getElementById('game-invite-banner')?.remove();
-const t=document.createElement('div');
-t.id='game-invite-banner';
-t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d0d18;border:2px solid var(--c1);color:#fff;padding:16px 22px;border-radius:14px;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;box-shadow:0 0 30px rgba(0,245,255,.4);animation:fadeUp .3s ease;min-width:300px;';
-t.innerHTML='<span>🎮 <b>'+fromName+'</b> lädt ein: '+( gameNames[game]||game)+'</span>';
+const invBanner=document.createElement('div');
+invBanner.id='game-invite-banner';
+invBanner.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d0d18;border:2px solid var(--c1);color:#fff;padding:16px 22px;border-radius:14px;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;box-shadow:0 0 30px rgba(0,245,255,.4);animation:fadeUp .3s ease;min-width:300px;';
+invBanner.innerHTML='<span>🎮 <b>'+fromName+'</b> lädt ein: '+( gameNames[game]||game)+'</span>';
 
 const ctrls={snake:['Pfeiltasten','WASD'],pong:['Maus','W/S Tasten','Pfeiltasten'],vier:[],battle:[],kniffel:[]};
 const gameCtrls=ctrls[game]||[];
@@ -485,14 +485,14 @@ x.style.background=x.dataset.c===guestCtrl?'rgba(0,245,255,.08)':'transparent';
 });
 });
 });
-t.insertBefore(ctrlPicker,t.querySelector('button'));
+invBanner.insertBefore(ctrlPicker,invBanner.querySelector('button'));
 }
 
 const acceptBtn=document.createElement('button');
 acceptBtn.textContent=t('lobby.join.btn');
 acceptBtn.style.cssText='padding:6px 14px;background:var(--c1);color:#000;border:none;border-radius:6px;font-weight:800;cursor:pointer;font-family:inherit;font-size:13px';
 acceptBtn.addEventListener('click',async()=>{
-t.remove();
+invBanner.remove();
 const joinRes=await apiCall('rooms/'+roomId+'/join','POST',{});
 if(joinRes&&!joinRes.error){
 startGame(game,{
@@ -510,12 +510,12 @@ showToast(t('error.generic')+': '+(joinRes?.error||t('error.room.unavailable')))
 const declineBtn=document.createElement('button');
 declineBtn.textContent='×';
 declineBtn.style.cssText='padding:5px 10px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-family:inherit';
-declineBtn.addEventListener('click',()=>t.remove());
+declineBtn.addEventListener('click',()=>invBanner.remove());
 
-t.appendChild(acceptBtn);
-t.appendChild(declineBtn);
+invBanner.appendChild(acceptBtn);
+invBanner.appendChild(declineBtn);
 document.body.appendChild(t);
-setTimeout(()=>t.remove(),20000);
+setTimeout(()=>invBanner.remove(),20000);
 }
 
 // Wire search input
