@@ -256,7 +256,7 @@ syncLobbyScore(wins1,wins2);
 over=true;draw(w.line);showEndScreen(p1won);
 if(p1won)fbSaveScore('vier',200);
 const winnerName=p1won?(opts.players?.[0]?.name||'Spieler 1'):(opts.players?.[1]?.name||'Spieler 2');
-document.getElementById('g-status').textContent=(isLocal2P?winnerName+t('vier.win.msg'):t('game.win'))+'! 🎉 '+t('vier.restart.hint');
+const _vierWinner=isLocal2P?winnerName:(p1won?(opts.players?.[0]?.name||'P1'):(opts.players?.[1]?.name||opts.aiName||'KI')); document.getElementById('g-status').textContent=_vierWinner+' '+t('game.win')+' 🎉 '+t('vier.restart.hint');
 sndWin();
 // Tell opponent they lost
 if(opts.isOnline&&opts.onlineRoomId){
