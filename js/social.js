@@ -514,7 +514,7 @@ declineBtn.addEventListener('click',()=>invBanner.remove());
 
 invBanner.appendChild(acceptBtn);
 invBanner.appendChild(declineBtn);
-document.body.appendChild(t);
+document.body.appendChild(invBanner);
 setTimeout(()=>invBanner.remove(),20000);
 }
 
