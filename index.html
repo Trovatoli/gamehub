@@ -209,15 +209,17 @@
 <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
 <button onclick="loadLobbies()" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600"><span>🔄 </span><span data-i18n="lobby.refresh">Aktualisieren</span></button>
 <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin-bottom:4px"><span data-i18n="lobby.vs.player">VS Spieler</span>:</div>
-<button onclick="createPublicLobby('vier')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600"><span data-i18n="game.vier">4 Gewinnt</span></button>
+<button onclick="createPublicLobby('vier')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🔴 <span data-i18n="game.vier">4 Gewinnt</span></button>
 <button onclick="createPublicLobby('snake')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🐍 Snake</button>
 <button onclick="createPublicLobby('pong')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🏓 Pong</button>
 <button onclick="createPublicLobby('battle')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🚢 <span data-i18n="game.battle">Schiffe</span></button>
 <button onclick="createPublicLobby('kniffel')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--c1);border-radius:7px;color:var(--c1);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🎲 <span data-i18n="game.kniffel">Kniffel</span></button>
 <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px;margin:6px 0 4px"><span data-i18n="lobby.ai">VS KI</span>:</div>
-<button onclick="createAILobby('vier')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600"><span data-i18n="game.vier">4 Gewinnt</span></button>
+<button onclick="createAILobby('vier')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🔴 <span data-i18n="game.vier">4 Gewinnt</span></button>
 <button onclick="createAILobby('snake')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🐍 Snake</button>
 <button onclick="createAILobby('pong')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🏓 Pong</button>
+<button onclick="createAILobby('snakeclassic')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🟩 Snake Classic</button>
+<button onclick="createAILobby('pacman')" style="padding:6px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">👾 Pac-Man</button>
 </div>
 <div id="lobby-list">
 <div style="color:var(--muted);font-size:12px;padding:20px;text-align:center" id="lobby-empty">Lade Lobbys...</div>
