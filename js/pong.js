@@ -431,7 +431,7 @@ const btn=document.getElementById('rematch-btn');
 if(btn){
 btn.onclick=null;
 btn.addEventListener('click',()=>{
-btn.disabled=true;btn.textContent='Warte...';
+btn.disabled=true;btn.textContent=(currentLang==='en'?'Wait...':'Warte...');
 if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'rematch'}));
 });
 }
