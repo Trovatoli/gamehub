@@ -327,40 +327,7 @@ style="width:100%;background:var(--bg3);border:1px solid var(--border);border-ra
 </div>
 <!-- ── IMPRESSUM ── -->
 <div class="page" id="page-impressum">
-<div style="max-width:680px;padding:24px;" id="impressum-content">
-  <h2 style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:20px;" data-i18n="impressum.title">📄 Impressum</h2>
-  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;line-height:1.8;color:var(--text);font-size:14px;display:flex;flex-direction:column;gap:16px;">
-
-    <div>
-      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;" data-i18n="impressum.provider">Anbieter</div>
-      <div>GameHub (privates Hobbyprojekt, nicht kommerziell)</div>
-    </div>
-
-    <div>
-      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;" data-i18n="impressum.contact">Kontakt</div>
-      <div>E-Mail: gamehub@example.com</div>
-    </div>
-
-    <div>
-      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;" data-i18n="impressum.responsible">Verantwortlich für den Inhalt (§ 55 Abs. 2 RStV)</div>
-      <div data-i18n="impressum.responsible.text">Betreiber dieser Seite</div>
-    </div>
-
-    <div>
-      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;" data-i18n="impressum.disclaimer">Haftungsausschluss</div>
-      <div style="color:var(--muted);font-size:13px;" data-i18n="impressum.disclaimer.text">Diese Webseite ist ein privates, nicht kommerzielles Hobbyprojekt. Es wird keine Haftung für die Richtigkeit, Vollständigkeit oder Aktualität der bereitgestellten Inhalte übernommen. Externe Links wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft.</div>
-    </div>
-
-    <div>
-      <div style="font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;" data-i18n="impressum.privacy">Datenschutz</div>
-      <div style="color:var(--muted);font-size:13px;" data-i18n="impressum.privacy.text">Es werden keine personenbezogenen Daten an Dritte weitergegeben. Gespeichert werden nur: E-Mail-Adresse, Benutzername und Spielstatistiken. Keine Weitergabe an Dritte. Keine Werbung.</div>
-    </div>
-
-    <div style="border-top:1px solid var(--border);padding-top:12px;">
-      <p style="color:var(--muted);font-size:12px;">© 2026 GameHub · <span data-i18n="impressum.rights">Alle Rechte vorbehalten</span></p>
-    </div>
-  </div>
-</div>
+<div id="impressum-content" style="max-width:680px;padding:24px;"></div>
 </div>
 
 <!-- Main App -->
@@ -483,6 +450,29 @@ function openAddFriend(){
     _st=setTimeout(function(){searchAddFriend(inp.value.trim());},300);
   });
   inp.focus();
+}
+</script>
+
+<script>
+function renderImpressum(){
+  var el=document.getElementById('impressum-content');
+  if(!el)return;
+  var en=currentLang==='en';
+  el.innerHTML=
+    '<h2 style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:20px;">'+(en?'📄 Imprint':'📄 Impressum')+'</h2>'+
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;line-height:1.8;font-size:14px;display:flex;flex-direction:column;gap:18px;">'+
+      '<div><div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">'+(en?'PROVIDER':'ANBIETER')+'</div>'+
+      '<div>GameHub ('+(en?'private hobby project, non-commercial':'privates Hobbyprojekt, nicht kommerziell')+')</div></div>'+
+      '<div><div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">'+(en?'CONTACT':'KONTAKT')+'</div>'+
+      '<div>E-Mail: gamehub@example.com</div></div>'+
+      '<div><div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">'+(en?'RESPONSIBLE (§ 55 Abs. 2 RStV)':'VERANTWORTLICH (§ 55 Abs. 2 RStV)')+'</div>'+
+      '<div>'+(en?'Operator of this site':'Betreiber dieser Seite')+'</div></div>'+
+      '<div><div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">'+(en?'DISCLAIMER':'HAFTUNGSAUSSCHLUSS')+'</div>'+
+      '<div style="color:var(--muted);font-size:13px">'+(en?'This is a private, non-commercial hobby project. No liability for accuracy or completeness of content. External links were checked at time of linking.':'Privates, nicht kommerzielles Hobbyprojekt. Keine Haftung für Richtigkeit oder Vollständigkeit der Inhalte. Externe Links wurden zum Zeitpunkt der Verlinkung überprüft.')+'</div></div>'+
+      '<div><div style="font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">'+(en?'PRIVACY':'DATENSCHUTZ')+'</div>'+
+      '<div style="color:var(--muted);font-size:13px">'+(en?'No personal data is shared with third parties. Only stored: email address, username and game statistics. No advertising.':'Keine personenbezogenen Daten werden an Dritte weitergegeben. Gespeichert werden nur: E-Mail-Adresse, Benutzername und Spielstatistiken. Keine Werbung.')+'</div></div>'+
+      '<div style="border-top:1px solid var(--border);padding-top:12px;color:var(--muted);font-size:12px">© 2026 GameHub · '+(en?'All rights reserved':'Alle Rechte vorbehalten')+'</div>'+
+    '</div>';
 }
 </script>
 </body>
