@@ -113,7 +113,7 @@ const p2name=opts.players?.[1]?.name||'Spieler 2';
 if(aiAllSunk){
 over=true;pSunk=TOTAL_SHIPS;
 document.getElementById('s1').textContent=pSunk;
-const winMsg=isLocal2P?(_activeShooter===1?p1name+' gewinnt! 🎉':'Du gewinnst! 🎉'):(currentLang==='en'?'🎉 You win! All ships sunk!':'🎉 '+t('game.win')+' '+t('battle.all.sunk'));
+const _battleWinner=isLocal2P?(_activeShooter===1?p1name:(p2name||'P2')):(opts.players?.[0]?.name||'Du'); const winMsg=_battleWinner+' '+t('game.win')+' 🎉 '+t('battle.all.sunk');
 document.getElementById('g-status').textContent=winMsg;
 sndWin();
 if(currentGame._rematch)setTimeout(()=>currentGame._rematch.show(true),400);
@@ -320,7 +320,7 @@ ctx.fillStyle=pTurn?'#00f5ff':'#b94fff';
 ctx.fillText(pTurn?currentLang==="en"?'🎯 Click ENEMY grid to shoot | Hit = shoot again!':t('battle.your.shot'):currentLang==="en"?'⏳ AI is shooting...':t(opts.isOnline?'game.opp.turn':'vier.ai.turn'),C.width/2,C.height-9);
 }else{
 ctx.fillStyle='#ffcc00';ctx.font='bold 11px sans-serif';
-ctx.fillText(pShips.every(s=>s.sunk)?currentLang==="en"?'AI WINS':'KI GEWINNT':currentLang==="en"?'YOU WIN! All ships sunk!':t('game.win')+' '+t('battle.all.sunk'),C.width/2,C.height-9);
+const _bwMsg=pShips.every(s=>s.sunk)?(opts.aiName||'KI')+' '+t('game.win'):(opts.players?.[0]?.name||'Du')+' '+t('game.win'); ctx.fillText(_bwMsg,C.width/2,C.height-9);
 }
 ctx.textAlign='left';
 }
@@ -649,7 +649,7 @@ draw(); // draw hit first
 const totalOpp=aiShips.reduce((a,sh)=>a+sh.cells.length,0);
 if(totalOpp>0&&aHitsOnline.size>=totalOpp){
 over=true;
-document.getElementById('g-status').textContent=t('game.win');
+document.getElementById('g-status').textContent=(opts.players?.[0]?.name||'Du')+' '+t('game.win');
 sndWin();fbSaveScore('battle',500);
 if(currentGame._battleWs&&currentGame._battleWs.readyState===1)
 currentGame._battleWs.send(JSON.stringify({type:'battle_over',winner:myRole}));
