@@ -879,7 +879,7 @@ function _ensureChatPanel() {
   const st = document.createElement('style');
   st.textContent = `
 /* ── Chat Panel ── */
-#chat-slide-panel{position:fixed;top:0;right:-520px;bottom:0;width:min(460px,88vw);background:var(--bg2,#0d0d24);border-left:2px solid var(--c1);z-index:9999;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.7);transition:right .22s ease;pointer-events:all;}
+#chat-slide-panel{position:fixed;top:0;right:-100vw;bottom:0;width:min(460px,88vw);background:var(--bg2,#0d0d24);border-left:2px solid var(--c1);z-index:9999;display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.7);transition:right .22s ease;pointer-events:all;}
 #chat-slide-panel.open{right:0;}
 #chat-slide-panel .csp-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg3,#080818);}
 #chat-slide-panel .csp-hdr b{font-size:14px;color:var(--text);}
