@@ -48,7 +48,7 @@ de:{
 // Game status
 'game.pause':'⏸ Pause','game.resume':'▶ Weiter',
 'game.start':'Klicke um zu starten','game.over':'Spiel beendet',
-'game.win':'🏆 Du gewinnst!','game.lose':'💀 Du verlierst!',
+'game.win':'🏆 gewinnt!','game.lose':'💀 Du verlierst!',
 'game.draw':'Unentschieden!','game.rematch':'↺ Rematch','game.menu':'Menü',
 'game.waiting':'⏳ Warte auf Gegner...','game.your.turn':'🎯 Dein Zug!',
 'game.opp.turn':'⏳ Gegner ist dran...','game.connecting':'Verbinde...',
@@ -178,7 +178,7 @@ en:{
 // Game status
 'game.pause':'⏸ Pause','game.resume':'▶ Resume',
 'game.start':'Click to start','game.over':'Game Over',
-'game.win':'🏆 You win!','game.lose':'💀 You lose!',
+'game.win':'🏆 wins!','game.lose':'💀 You lose!',
 'game.draw':'Draw!','game.rematch':'↺ Rematch','game.menu':'Menu',
 'game.waiting':'⏳ Waiting for opponent...','game.your.turn':'🎯 Your turn!',
 'game.opp.turn':"⏳ Opponent\'s turn...",'game.connecting':'Connecting...',
