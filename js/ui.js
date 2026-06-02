@@ -142,10 +142,12 @@ document.getElementById('s1').textContent='0';
 document.getElementById('s2').textContent='0';
 const p2name=opts.isOnline?(opts.opponentName||'Gegner'):(opts.players?.[1]?.type==='human'?(opts.players?.[1]?.name||'Spieler 2'):(opts.players?.[1]?.type==='ai'?'KI':''));
 document.getElementById('s2lbl').textContent=p2name;
-// Hide P2 score chip when truly solo (no AI, no second player)
+// Hide P2 score chip for solo modes (snakeclassic, or no opponent)
 const _s2chip=document.getElementById('s2-chip');
-if(_s2chip)_s2chip.style.display=(!opts.players||opts.players.length<=1)?'none':'';
-const s2chip=document.getElementById('s2-chip');if(s2chip)s2chip.style.display='';
+if(_s2chip){
+  const _solo = type==='snakeclassic' || (!opts.isOnline && (!opts.players || opts.players.length<=1) && !opts.vsAI);
+  _s2chip.style.display = _solo ? 'none' : '';
+}
 document.getElementById('pause-overlay').classList.remove('show');
 document.getElementById('gc').style.display='block';
 document.getElementById('kniffel-ui').style.display='none';
