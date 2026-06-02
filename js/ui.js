@@ -74,6 +74,7 @@ overlay._activePage=page;
 if(page==='account'){try{renderAccount();loadFriendRequests();}catch(e){}}
 if(page==='lobby'){try{loadLobbies();}catch(e){}}
 if(page==='stats'){try{updateStats();}catch(e){}}
+if(page==='impressum'){try{renderImpressum&&renderImpressum();}catch(e){}}
 
 }
 } else {
