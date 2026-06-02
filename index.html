@@ -386,14 +386,32 @@ function gateToggleLang(){
   var newLang=currentLang==='de'?'en':'de';
   currentLang=newLang;
   try{localStorage.setItem('ghlang',newLang);}catch(e){}
-  var btn=document.getElementById('gate-lang-btn');
-  if(btn)btn.textContent='🌐 '+newLang.toUpperCase();
-  var sub=document.getElementById('gate-subtitle');
-  if(sub)sub.textContent=newLang==='en'?'Log in or create an account':'Einloggen oder Account erstellen';
-  var tl=document.getElementById('gate-tab-login');if(tl)tl.textContent=newLang==='en'?'Log in':'Einloggen';
-  var tr=document.getElementById('gate-tab-register');if(tr)tr.textContent=newLang==='en'?'Register':'Registrieren';
-  var bl=document.getElementById('gate-btn-login');if(bl)bl.textContent=newLang==='en'?'Log in':'Einloggen';
-  var br=document.getElementById('gate-btn-register');if(br)br.textContent=newLang==='en'?'Create Account':'Account erstellen';
+  var en=newLang==='en';
+  var btn=document.getElementById('gate-lang-btn');if(btn)btn.textContent='🌐 '+newLang.toUpperCase();
+  var sub=document.getElementById('gate-subtitle');if(sub)sub.textContent=en?'Log in or create an account':'Einloggen oder Account erstellen';
+  var tl=document.getElementById('gate-tab-login');if(tl)tl.textContent=en?'Log in':'Einloggen';
+  var tr=document.getElementById('gate-tab-register');if(tr)tr.textContent=en?'Register':'Registrieren';
+  var bl=document.getElementById('gate-btn-login');if(bl)bl.textContent=en?'Log in':'Einloggen';
+  var br=document.getElementById('gate-btn-register');if(br)br.textContent=en?'Create Account':'Account erstellen';
+  // Labels
+  var labels={
+    'gate-email':'E-MAIL','gate-pass':'PASSWORD','gate-name':'NAME',
+    'gate-email2':'E-MAIL','gate-pass2':'PASSWORD'
+  };
+  document.querySelectorAll('#auth-gate .auth-gate-label').forEach(function(el){
+    var inp=el.nextElementSibling;
+    if(!inp)return;
+    var id=inp.id;
+    if(id==='gate-email'||id==='gate-email2')el.textContent='E-MAIL';
+    else if(id==='gate-pass'||id==='gate-pass2')el.textContent=en?'PASSWORD':'PASSWORT';
+    else if(id==='gate-name')el.textContent=en?'NAME':'NAME';
+  });
+  // Placeholders
+  var ep=document.getElementById('gate-email');if(ep)ep.placeholder=en?'your@email.com':'deine@email.de';
+  var ep2=document.getElementById('gate-email2');if(ep2)ep2.placeholder=en?'your@email.com':'deine@email.de';
+  var pp=document.getElementById('gate-pass');if(pp)pp.placeholder=en?'Password...':'Passwort...';
+  var pp2=document.getElementById('gate-pass2');if(pp2)pp2.placeholder=en?'Min. 6 chars...':'Min. 6 Zeichen...';
+  var np=document.getElementById('gate-name');if(np)np.placeholder=en?'Your name...':'Dein Name...';
 }
 var _gThemes=['neon','light','retro'];
 var _gThemeNames={neon:'🌟 Neon',light:'☀ Hell',retro:'💾 Retro'};
