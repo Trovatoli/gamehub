@@ -127,7 +127,7 @@ return '<div class="friend" style="position:relative" id="friend-'+f.uid+'">'
 +'</div>'
 +'<button data-remove-friend="'+f.uid+'" title="Freund entfernen" style="background:transparent;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 4px;opacity:0;transition:opacity .15s">✕</button>'
 +'</div>';
-}).join('')||'<div style="padding:4px 8px;font-size:11px;color:var(--muted)">Noch keine Freunde</div>';
+}).join('')||'<div style="padding:4px 8px;font-size:11px;color:var(--muted)">(currentLang==='en'?'No friends yet':'Noch keine Freunde')</div>';
 // Wire DM clicks
 list.querySelectorAll('[data-dm-uid]').forEach(el=>{
 el.addEventListener('click',()=>openDM(el.dataset.dmUid,el.dataset.dmName));
