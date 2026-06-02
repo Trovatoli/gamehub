@@ -62,10 +62,10 @@ nav::-webkit-scrollbar{width:0}
 .icon-btn:hover{border-color:var(--c1);color:var(--c1)}
 
 /* ── CONTENT ─────────────────────────────────── */
-.page{display:none;flex:1;overflow-y:auto;padding:20px}
+.page{display:none !important;flex:1;overflow-y:auto;padding:20px}
 .page::-webkit-scrollbar{width:4px}
 .page::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.page.active{display:flex;flex-direction:column}
+.page.active{display:flex !important;flex-direction:column}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .page.active{animation:fadeUp .2s ease}
 
