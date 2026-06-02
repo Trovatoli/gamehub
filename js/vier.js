@@ -186,7 +186,7 @@ ctx.font=`${Math.max(11,R*.5)}px sans-serif`;ctx.textAlign='center';
 const isLocal2P=!opts.isOnline&&opts.players?.[1]?.type==='human';
 const myT2=opts.isOnline?(opts.isHost?1:2):(isLocal2P?turn:1);
 const oppName=opts.isOnline?(opts.opponentName||'Gegner'):(isLocal2P?(opts.players?.[1]?.name||'Spieler 2'):'KI');
-const lbl=isLocal2P?(turn===1?(opts.players?.[0]?.name||'Spieler 1')+' ist dran 🔵':(opts.players?.[1]?.name||'Spieler 2')+' ist dran 🟡'):(turn===myT2?'🔵 Dein Zug':(opts.isOnline?`⏳ ${oppName} ist dran`:'🟡 KI denkt...'));
+const lbl=isLocal2P?(turn===1?(opts.players?.[0]?.name||'P1')+(currentLang==='en'?"'s turn 🔵":' ist dran 🔵'):(opts.players?.[1]?.name||'P2')+(currentLang==='en'?"'s turn 🟡":' ist dran 🟡')):(turn===myT2?t('vier.your.turn'):(opts.isOnline?`⏳ ${oppName} ${currentLang==='en'?"'s turn":' ist dran'}`:(t('vier.ai.thinking'))));
 ctx.fillStyle=turn===myT2?'rgba(0,245,255,.6)':'rgba(255,204,0,.6)';
 ctx.fillText(lbl,CW/2,CH-12);
 }
