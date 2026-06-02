@@ -449,7 +449,7 @@ const dicePanel=`<div style="display:flex;flex-direction:${stacked?'row':'column
 </div>
 <div style="display:flex;flex-direction:column;align-items:center;gap:10px;flex-shrink:0">
 <div style="font-size:${stacked?12:14}px;color:${isHumanTurn?'#8ab4c4':'#3a4a5a'};text-align:center;white-space:nowrap">
-${rolling?'🎲 Würfelt...':`${allPlayers[currentPlayerIdx]?.name} ist dran — Wurf ${rolls}/3${rolls>0?' · '+held.filter(Boolean).length+' gehalten':''}`}
+${rolling?(currentLang==='en'?'🎲 Rolling...':'🎲 Würfelt...'):`${allPlayers[currentPlayerIdx]?.name}${currentLang==='en'?"'s turn — Roll ":' ist dran — Wurf '}${rolls}/3${rolls>0?' · '+held.filter(Boolean).length+(currentLang==='en'?' held':' gehalten'):''}`}
 </div>
 ${rolls>0&&!rolling&&isHumanTurn?`<div style="background:rgba(0,180,216,.05);border:1px solid rgba(0,180,216,.15);border-radius:8px;padding:6px 14px;font-size:11px;color:#3a5a6a;text-align:center">Würfel anklicken zum Festhalten</div>`:''}
 <button onclick="window.__kRoll()" ${canRoll?'':'disabled'} style="padding:11px 32px;border-radius:10px;font-size:${stacked?13:14}px;font-weight:800;font-family:inherit;border:none;cursor:${canRoll?'pointer':'not-allowed'};background:${canRoll?'linear-gradient(135deg,#00b4d8,#006d8f)':'#0e0e20'};color:${canRoll?'white':'#252540'};box-shadow:${canRoll?'0 4px 20px rgba(0,180,216,.35)':'none'};transition:all .18s;min-width:${stacked?160:200}px">
