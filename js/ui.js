@@ -733,10 +733,10 @@ modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.
 modal.innerHTML=`
 <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:90%;max-width:360px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-<span style="font-size:15px;font-weight:800;color:var(--text)">👥 Spieler hinzufügen</span>
+<span style="font-size:15px;font-weight:800;color:var(--text)">👥 ${t('friend.add.title')||'Spieler hinzufügen'}</span>
 <button id="af-close" style="background:transparent;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1">×</button>
 </div>
-<input id="af-search" placeholder="Namen eingeben..." maxlength="30"
+<input id="af-search" placeholder="${t('friend.search.placeholder')||'Namen eingeben...'}" maxlength="30"
 style="width:100%;box-sizing:border-box;background:var(--bg3);border:1.5px solid var(--c1);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;margin-bottom:10px">
 <div id="af-results" style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto">
 <div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">'+t('friend.search.hint')+'</div>
@@ -746,10 +746,10 @@ document.body.appendChild(modal);
 modal.querySelector('#af-close').addEventListener('click',closeAddFriend);
 modal.addEventListener('click',e=>{if(e.target===modal)closeAddFriend();});
 const inp=modal.querySelector('#af-search');
-let t=null;
+let _searchTimer=null;
 inp.addEventListener('input',()=>{
-clearTimeout(t);
-t=setTimeout(()=>searchAddFriend(inp.value.trim()),300);
+clearTimeout(_searchTimer);
+_searchTimer=setTimeout(()=>searchAddFriend(inp.value.trim()),300);
 });
 inp.focus();
 }
