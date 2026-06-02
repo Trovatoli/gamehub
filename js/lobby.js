@@ -80,6 +80,11 @@ loadLobbies();
 
 async function createAILobby(game){
 if(!fbUser){showToast(t('auth.need.login'));return;}
+// Solo games don't need a lobby
+if(game==='snakeclassic'||game==='pacman'){
+  startGame(game,{diff:'medium',ctrl:'Pfeiltasten',mode:'Solo',players:[{name:fbUser.name,type:'human',color:0}]});
+  return;
+}
 const res=await apiCall('lobbies/create','POST',{game,vsAI:true,hostName:fbUser.name});
 if(res?.roomId){
 startGame(game,{diff:'medium',ctrl:'Pfeiltasten',mode:'Solo',
