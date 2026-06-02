@@ -634,10 +634,15 @@ function handleAPI(pathname, method, body, req, res) {
   if(pathname==='/api/scores'&&method==='POST'){
     const user=getUser();
     if(!user) return sendJSON(401,{error:'Nicht eingeloggt'});
-    const {game,score}=body;
-    if(!user.scores[game]||score>user.scores[game]) user.scores[game]=score;
-    // Cumulative total: add score to running total
-    user.total=(user.total||0)+score;
+    const {game,score,syncTotal,syncScores}=body;
+    // If client is syncing full data (syncTotal provided), use that
+    if(syncTotal&&syncTotal>(user.total||0)){
+      user.total=syncTotal;
+      if(syncScores){Object.keys(syncScores).forEach(g=>{if(!user.scores[g]||syncScores[g]>user.scores[g])user.scores[g]=syncScores[g];});}
+    } else if(game&&score>0){
+      if(!user.scores[game]||score>user.scores[game]) user.scores[game]=score;
+      user.total=(user.total||0)+score;
+    }
     saveData(data);
     return sendJSON(200,{ok:true,scores:user.scores,total:user.total});
   }
