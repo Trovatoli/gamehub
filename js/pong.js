@@ -53,7 +53,7 @@ document.getElementById('g-status').textContent=t('pong.you.win');
 currentGame._rematch.show(true);
 }
 nextBallDir=-1; // toward AI after player scores
-if(s1>=WIN){over=true; document.getElementById('g-status').textContent='🎉 '+t('game.win')+' '+s1+':'+s2; sndWin(); fbSaveScore('pong',s1*100); return;}
+if(s1>=WIN){over=true; document.getElementById('g-status').textContent='🏆 '+(opts.players?.[0]?.name||'P1')+' '+t('game.win')+' '+s1+':'+s2; sndWin(); fbSaveScore('pong',s1*100); return;}
 } else {
 s2++;
 document.getElementById('s2').textContent=s2;
