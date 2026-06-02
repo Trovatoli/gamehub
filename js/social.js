@@ -423,8 +423,12 @@ const res=await apiCall('rooms/create','POST',{game:gameId});
 if(!res||res.error){status.textContent=t('error.generic')+': '+(res?.error||'?');return;}
 const roomId=res.roomId;
 
-if(socialWs&&socialWs.readyState===1)
-socialWs.send(JSON.stringify({type:'game_invite',toUid,game:gameId,roomId}));
+if(socialWs&&socialWs.readyState===1){
+  socialWs.send(JSON.stringify({type:'game_invite',toUid,game:gameId,roomId}));
+  showToast('🎮 Einladung gesendet!');
+} else {
+  showToast('❌ Nicht verbunden. Bitte Seite neu laden.');
+}
 
 status.innerHTML='✅ '+t('lobby.created').split('!')[0]+'! '+t('lobby.code')+': <b style="color:var(--c1);letter-spacing:2px">'+roomId+'</b><br><span style="font-size:10px;color:var(--muted)">Warte auf '+friendName+'...</span>';
 
@@ -458,7 +462,7 @@ const gameNames={snake:'🐍 Snake',pong:'🏓 Pong',vier:'🔴 4 Gewinnt',battl
 document.getElementById('game-invite-banner')?.remove();
 const t=document.createElement('div');
 t.id='game-invite-banner';
-t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d0d18;border:1px solid var(--c1);color:#fff;padding:14px 20px;border-radius:12px;font-size:13px;z-index:99999;display:flex;gap:10px;align-items:center;box-shadow:0 0 20px rgba(0,245,255,.2)';
+t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0d0d18;border:2px solid var(--c1);color:#fff;padding:16px 22px;border-radius:14px;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;box-shadow:0 0 30px rgba(0,245,255,.4);animation:fadeUp .3s ease;min-width:300px;';
 t.innerHTML='<span>🎮 <b>'+fromName+'</b> lädt ein: '+( gameNames[game]||game)+'</span>';
 
 const ctrls={snake:['Pfeiltasten','WASD'],pong:['Maus','W/S Tasten','Pfeiltasten'],vier:[],battle:[],kniffel:[]};
