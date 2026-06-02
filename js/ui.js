@@ -60,15 +60,13 @@ closeBtn.innerHTML=t('lobby.close.back');
 closeBtn.style.cssText='padding:10px 16px;cursor:pointer;font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);font-weight:700;flex-shrink:0;';
 closeBtn.onclick=()=>nav('game');
 overlay.appendChild(closeBtn);
-// Move REAL page element into overlay (keeps all JS/events working)
-targetPage._origParent=targetPage.parentNode;
-targetPage._origNextSibling=targetPage.nextSibling;
-targetPage.style.flex='1';
-targetPage.style.minHeight='0';
-targetPage.style.display='flex';
+// Show target page over the game (no moving - avoids restore bugs)
 targetPage.classList.add('active');
-overlay.appendChild(targetPage);
-overlay.style.display='flex';
+targetPage.style.position='fixed';
+targetPage.style.inset='48px 0 0 var(--sidebar)';
+targetPage.style.zIndex='500';
+targetPage.style.background='var(--bg)';
+overlay._activePage2=targetPage;
 overlay._activePage=page;
 // Init page content
 if(page==='account'){try{renderAccount();loadFriendRequests();}catch(e){}}
@@ -81,18 +79,10 @@ if(page==='impressum'){try{renderImpressum&&renderImpressum();}catch(e){}}
 // Returning to game - move page back and close overlay
 const ol=document.getElementById('nav-overlay');
 if(ol){
-// Move page back to original parent
-const activePage=ol._activePage;
-if(activePage){
-const pg=document.getElementById('page-'+activePage);
-if(pg&&pg._origParent){
+const pg=ol._activePage2;
+if(pg){
 pg.classList.remove('active');
-pg.style.flex='';
-pg.style.minHeight='';
-pg.style.display='';
-if(pg._origNextSibling)pg._origParent.insertBefore(pg,pg._origNextSibling);
-else pg._origParent.appendChild(pg);
-}
+pg.style.position='';pg.style.inset='';pg.style.zIndex='';pg.style.background='';
 }
 ol.remove();
 }
