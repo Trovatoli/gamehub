@@ -20,7 +20,7 @@ body.theme-retro{--bg:#000a00;--bg2:#001200;--bg3:#001800;--card:#000f00;--card2
 .app{display:flex;height:100vh}
 
 /* ── SIDEBAR ─────────────────────────────────── */
-.sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.sidebar{width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;height:100vh;position:sticky;top:0}
 .logo{padding:16px 14px 12px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
 .logo-name{font-size:19px;font-weight:900;letter-spacing:2px;background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .logo-tag{font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:1px}
@@ -43,7 +43,7 @@ nav::-webkit-scrollbar{width:0}
 .av-r{background:rgba(255,64,129,.12);color:var(--c3);border-color:rgba(255,64,129,.3)}
 .su-name{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .su-pts{font-size:10px;color:var(--muted)}
-.online-section{padding:8px 12px 10px;border-top:1px solid var(--border)}
+.online-section{padding:8px 12px 10px;border-top:1px solid var(--border);overflow:hidden;flex-shrink:0;}
 .online-hdr{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;font-weight:700}
 .friend{display:flex;align-items:center;gap:8px;padding:4px 2px;border-radius:6px;cursor:pointer;transition:background .15s}
 .friend:hover{background:var(--bg3)}
@@ -357,25 +357,5 @@ font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px
 .auth-gate-msg.err{background:rgba(255,80,80,.15);border:1px solid rgba(255,80,80,.3);color:#f87171;}
 .auth-gate-footer{text-align:center;font-size:10px;color:#3a3a5a;margin-top:14px;}
 
-/* Chat Panel Overlay */
-#chat-panel-overlay{
-  position:fixed;top:0;right:-520px;bottom:0;width:min(480px,90vw);
-  background:var(--bg2,#0d0d24);border-left:2px solid var(--c1,#00f5ff);
-  z-index:9999;display:flex;flex-direction:column;
-  box-shadow:-8px 0 32px rgba(0,0,0,.6);
-  transition:right .25s ease;
-}
-#chat-panel-overlay.open{right:0;}
-#chat-panel-overlay .cpo-hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 16px;border-bottom:1px solid var(--border);
-  flex-shrink:0;background:var(--bg3,#0a0a1a);
-}
-#chat-panel-overlay .cpo-hdr span{font-weight:700;font-size:15px;color:var(--text);}
-#chat-panel-overlay .cpo-close{
-  background:rgba(255,255,255,.15);border:none;color:var(--text);
-  font-size:20px;font-weight:900;cursor:pointer;border-radius:8px;
-  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
-  font-family:inherit;
-}
-#chat-panel-overlay .cpo-body{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+#friends-list{overflow-y:auto;flex:1;min-height:0;}
+.sidebar nav{flex:1;overflow-y:auto;padding-bottom:4px;}
