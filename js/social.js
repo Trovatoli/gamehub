@@ -107,6 +107,13 @@ renderFriendsSidebar();renderDMList();
 socialWs.onclose=()=>{ setTimeout(initSocialWS,3000); };
 }
 
+// Poll for friend requests every 30s as fallback
+if(!window._friendReqPoll){
+  window._friendReqPoll = setInterval(()=>{
+    if(fbUser) loadFriendRequests&&loadFriendRequests();
+  }, 30000);
+}
+
 function renderFriendsSidebar(){
 const list=document.getElementById('friends-list');
 const hdr=document.getElementById('online-hdr');
