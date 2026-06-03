@@ -65,6 +65,7 @@ async function loadFriendRequests(){
 if(!fbUser||!fbToken)return;
 try{
 const res=await apiCall('friends/requests','GET');
+console.log('[friends] API response:', JSON.stringify(res));
 if(res&&!res.error){
 if(Array.isArray(res.requests)){
   pendingRequests=res.requests;
