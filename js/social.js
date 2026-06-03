@@ -118,6 +118,10 @@ function renderFriendsSidebar(){
 const list=document.getElementById('friends-list');
 const hdr=document.getElementById('online-hdr');
 if(!list)return;
+// If no friends loaded yet, try fetching
+if(!friendsList.length&&fbUser&&fbToken){
+  setTimeout(()=>{ if(typeof loadFriendRequests==='function')loadFriendRequests(); }, 500);
+}
 const onlineF=friendsList.filter(f=>f.online);
 if(hdr)hdr.textContent=t('chat.online.count')+onlineF.length;
 list.innerHTML=friendsList.map(f=>{
