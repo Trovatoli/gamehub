@@ -10,7 +10,7 @@ socialWs.send(JSON.stringify({type:'auth',token:fbToken}));
 };
 socialWs.onmessage=(e)=>{
 const msg=JSON.parse(e.data);
-if(msg.type==='auth_ok') { renderFriendsSidebar(); }
+if(msg.type==='auth_ok') { renderFriendsSidebar(); loadFriendRequests&&loadFriendRequests(); }
 if(msg.type==='player_joined'){
 updateKniffelWaitingPlayers(msg.players);
 }
