@@ -62,19 +62,23 @@ if(rankEl)rankEl.textContent=myRank>=0?'#'+(myRank+1):'#—';
 }
 let authMode='login';
 async function loadFriendRequests(){
-if(!fbUser)return;
+if(!fbUser||!fbToken)return;
 try{
 const res=await apiCall('friends/requests','GET');
-if(res){
-if(Array.isArray(res.requests))pendingRequests=res.requests;
-if(Array.isArray(res.friends)&&res.friends.length){
-const seen2=new Set();
-friendsList=res.friends.filter(f=>{if(seen2.has(f.uid))return false;seen2.add(f.uid);return true;});
+if(res&&!res.error){
+if(Array.isArray(res.requests)){
+  pendingRequests=res.requests;
+}
+if(Array.isArray(res.friends)){
+  const seen2=new Set();
+  friendsList=res.friends.filter(f=>{if(seen2.has(f.uid))return false;seen2.add(f.uid);return true;});
 }
 renderFriendRequests();
 renderFriendsSidebar();
+} else if(res&&res.error){
+  console.log('[friends] error:',res.error);
 }
-}catch(e){}
+}catch(e){console.log('[friends] exception:',e);}
 }
 
 function renderAccount(){
