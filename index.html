@@ -460,5 +460,23 @@ function renderImpressum(){
   });
 })();
 </script>
+
+<script>
+// Wrapper in case social.js is cached - will call real function when available
+function sendFriendRequest(uid, name){
+  if(typeof socialSendFriendRequest === 'function') return socialSendFriendRequest(uid, name);
+  // Inline fallback
+  if(!fbUser){showToast&&showToast('Bitte einloggen');return;}
+  apiCall('friends/request','POST',{toUid:uid}).then(res=>{
+    if(res&&!res.error){
+      showToast&&showToast('Freundschaftsanfrage an '+name+' gesendet!');
+      document.querySelectorAll('[data-add-friend="'+uid+'"]').forEach(btn=>{btn.textContent='✓';btn.disabled=true;});
+      if(socialWs&&socialWs.readyState===1)socialWs.send(JSON.stringify({type:'friend_request',toUid:uid}));
+    } else {
+      showToast&&showToast((res&&res.error)||'Fehler');
+    }
+  }).catch(()=>{showToast&&showToast('Verbindungsfehler');});
+}
+</script>
 </body>
 </html>
