@@ -73,8 +73,8 @@ if(Array.isArray(res.friends)){
   const seen2=new Set();
   friendsList=res.friends.filter(f=>{if(seen2.has(f.uid))return false;seen2.add(f.uid);return true;});
 }
-renderFriendRequests();
-renderFriendsSidebar();
+if(typeof renderFriendRequests==="function")renderFriendRequests();
+if(typeof renderFriendsSidebar==="function")renderFriendsSidebar();
 } else if(res&&res.error){
   console.log('[friends] error:',res.error);
 }
