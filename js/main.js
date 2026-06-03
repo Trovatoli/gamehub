@@ -77,18 +77,23 @@ if(Array.isArray(res.friends)){
 if(typeof renderFriendRequests==="function"){
   renderFriendRequests();
 } else {
-  // Fallback: show requests inline in sidebar
+  // Fallback: render requests manually
   const sec=document.getElementById('friend-requests-section');
   if(sec&&pendingRequests.length){
     sec.style.display='block';
-    sec.innerHTML='<div style="font-size:10px;font-weight:700;color:#ff4081;letter-spacing:2px;margin-bottom:6px">'+pendingRequests.length+' ANFRAGE'+(pendingRequests.length>1?'N':'')+'</div>'+
-    pendingRequests.map(r=>'<div style="background:rgba(255,64,129,.1);border:1px solid rgba(255,64,129,.3);border-radius:8px;padding:7px 8px;margin-bottom:4px">'+
-      '<div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:5px">👋 '+r.name+'</div>'+
-      '<div style="display:flex;gap:5px">'+
-      '<button onclick="acceptFriendRequest(''+r.uid+'')" style="flex:1;padding:4px;background:#00e676;color:#000;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">✓ Annehmen</button>'+
-      '<button onclick="declineFriendRequest(''+r.uid+'')" style="padding:4px 8px;background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;border-radius:5px;font-size:11px;cursor:pointer">✕</button>'+
-      '</div></div>'
-    ).join('');
+    sec.innerHTML='';
+    pendingRequests.forEach(function(r){
+      const d=document.createElement('div');
+      d.style.cssText='background:rgba(255,64,129,.1);border:1px solid rgba(255,64,129,.3);border-radius:8px;padding:7px;margin-bottom:4px';
+      d.innerHTML='<div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:5px">&#x1F44B; '+r.name+'</div>'+
+        '<div style="display:flex;gap:5px">'+
+        '<button style="flex:1;padding:4px;background:#00e676;color:#000;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">&#x2713; Annehmen</button>'+
+        '<button style="padding:4px 8px;background:transparent;border:1px solid rgba(255,255,255,.2);color:#aaa;border-radius:5px;font-size:11px;cursor:pointer">&#x2715;</button>'+
+        '</div>';
+      d.querySelectorAll('button')[0].onclick=function(){if(typeof acceptFriendRequest==='function')acceptFriendRequest(r.uid);d.remove();};
+      d.querySelectorAll('button')[1].onclick=function(){if(typeof declineFriendRequest==='function')declineFriendRequest(r.uid);d.remove();};
+      sec.appendChild(d);
+    });
   }
 }
 if(typeof renderFriendsSidebar==="function")renderFriendsSidebar();
