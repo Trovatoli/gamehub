@@ -5,18 +5,15 @@ list.innerHTML='<div style="color:var(--muted);font-size:12px;padding:20px;text-
 
 let lobbies=[];
 
-// 1. Load from server
+  // 1. Vom Server laden
 try{
 const res=await apiCall('lobbies','GET');
 
 if(res?.lobbies&&Array.isArray(res.lobbies)) lobbies=res.lobbies;
 }catch(ex){console.log('[lobbies] error:',ex);}
 
-// 2. Local lobbies only as last resort - clear stale ones
-try{
-const local=JSON.parse(localStorage.getItem('gh_active_lobbies')||'[]');
-// Only show local lobbies not already in server list, max 10min old
-const fresh=local.filter(l=>(Date.now()-l.ts)<120000); // only 2min
+// Nur lokale Lobbies anzeigen, die noch nicht in der Serverliste sind, max. 10 Min. alt
+const fresh=local.filter(l=>(Date.now()-l.ts)<120000);
 fresh.forEach(ll=>{
 if(!lobbies.find(l=>l.roomId===ll.roomId)){
 lobbies.push({
@@ -27,7 +24,7 @@ spectators:0,created:ll.ts
 });
 }
 });
-// Keep only fresh
+// Nur aktuelle behalten
 localStorage.setItem('gh_active_lobbies',JSON.stringify(fresh));
 }catch(ex){}
 
@@ -67,20 +64,20 @@ ${canJoin?`<button onclick="${isKniffel?`joinKniffelLobby('${r.roomId}')`:`joinP
 
 async function createPublicLobby(game){
 if(!fbUser){showToast(t('auth.need.login'));return;}
-// Create waiting room for PvP
+// Warteraum für PvP erstellen
 const res=await apiCall('rooms/create','POST',{game});
 if(!res?.roomId){showToast(t('lobby.error'));return;}
 await apiCall('lobbies/create','POST',{game,vsAI:false,hostName:fbUser.name,roomId:res.roomId});
 saveActiveLobby(res.roomId,game,fbUser.name,false);
 showToast(t('lobby.created'));
-// Show online waiting screen
+// Online-Wartebildschirm anzeigen
 showOnlineWaiting(res.roomId,game);
 loadLobbies();
 }
 
 async function createAILobby(game){
 if(!fbUser){showToast(t('auth.need.login'));return;}
-// Solo games don't need a lobby
+// Solo-Spiele brauchen keine Lobby
 if(game==='snakeclassic'||game==='pacman'){
   startGame(game,{diff:'medium',ctrl:'Pfeiltasten',mode:'Solo',players:[{name:fbUser.name,type:'human',color:0}]});
   return;
@@ -99,7 +96,7 @@ if(!fbUser){showToast(t('auth.need.login'));return;}
 const res=await apiCall('rooms/'+roomId+'/join-multi','POST',{name:fbUser.name});
 if(!res||res.error){showToast(t('error.generic')+': '+(res?.error||'?'));return;}
 showToast(t('lobby.joined'));
-// Show waiting UI
+// Warte-UI anzeigen
 const el=document.createElement('div');
 el.id='kniffel-join-wait';
 el.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;font-family:inherit';
@@ -111,14 +108,14 @@ el.innerHTML=`<div style="background:#0d0d18;border:1px solid rgba(255,215,0,.3)
 <button onclick="document.getElementById('kniffel-join-wait').remove();clearInterval(window._kniffelJoinPoll2)" style="padding:8px 20px;background:transparent;border:1px solid #1e1e38;border-radius:8px;color:#6060a0;cursor:pointer;font-family:inherit;font-size:12px">Abbrechen</button>
 </div>`;
 document.body.appendChild(el);
-// Update players display
+// Spieleranzeige aktualisieren
 function updateJoinPlayers(players){
 const list=document.getElementById('kniffel-join-players');
 if(!list)return;
 list.innerHTML=(players||[]).map((p,i)=>`<div style="background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.15);border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:#fff">${p.name}</span>${i===0?'<span style="font-size:10px;color:#ffd700;margin-left:auto">👑</span>':''}</div>`).join('');
 }
 updateJoinPlayers(res.players);
-// Poll until game starts - check both 'started' and via WS notification
+// Bis Spielstart pollen - prüft sowohl 'started' als auch WS-Benachrichtigung
 window._kniffelJoinPoll2=setInterval(async()=>{
 if(!document.getElementById('kniffel-join-wait')){clearInterval(window._kniffelJoinPoll2);return;}
 const r=await apiCall('rooms/'+roomId+'/players','GET');
@@ -130,7 +127,7 @@ document.getElementById('kniffel-join-wait')?.remove();
 startKniffelOnline(r.players||[],roomId);
 }
 },1500);
-// Also listen via socialWs for instant notification
+// Zusätzlich über socialWs auf sofortige Benachrichtigung hören
 if(socialWs&&socialWs.readyState===1){
 const _origMsg=socialWs.onmessage;
 socialWs.onmessage=(ev)=>{
@@ -150,7 +147,7 @@ startKniffelOnline(msg.players,roomId);
 
 async function joinPublicLobby(roomId,game){
 if(!fbUser){showToast(t('auth.need.login'));return;}
-// Get room info first
+// Zuerst Rauminfos abrufen
 const room=await apiCall('rooms/'+roomId,'GET');
 if(!room||room.error){showToast(t('error.room.not.found'));return;}
 if(room.state!=='waiting'){showToast(t('error.room.full'));return;}
@@ -176,7 +173,7 @@ const players=room.players||[room.host];
 const gameNames=({snake:'🐍 '+t('game.snake'),pong:'🏓 '+t('game.pong'),vier:'🔴 '+t('game.vier'),battle:'🚢 '+t('game.battle'),kniffel:'🎲 '+t('game.kniffel')});
 
 if(game==='kniffel'){
-// Start real Kniffel UI in spectator mode - all players are 'online' (no control)
+// Echte Kniffel-UI im Zuschauermodus starten - alle Spieler sind 'online' (keine Steuerung)
 const spectatorPlayers=players.map((p,i)=>({
 name:p.name, type:'online', color:i, uid:p.uid
 }));
@@ -189,13 +186,13 @@ playerNames:players.map(p=>p.name)
 });
 document.getElementById('g-status').textContent='👁 Zuschauer-Modus';
 document.getElementById('pause-btn').style.display='none';
-// Poll and update scores/dice every 1.5s
+// Punkte/Würfel alle 1,5s pollen und aktualisieren
 window._specPoll=_safeInterval(async()=>{
 if(!currentGame||currentGame.type!=='kniffel'){clearInterval(window._specPoll);return;}
 const res=await apiCall('rooms/'+roomId+'/sync','GET');
 if(!res)return;
 const d=res.sync||res;
-// Update via global render functions
+// Über globale Render-Funktionen aktualisieren
 if(d.scores&&window.__kSpectatorUpdate){
 window.__kSpectatorUpdate(d.scores,d.dice,d.held,d.currentPlayerIdx);
 }
@@ -203,7 +200,7 @@ window.__kSpectatorUpdate(d.scores,d.dice,d.held,d.currentPlayerIdx);
 return;
 }
 
-// Non-kniffel: canvas stream overlay
+// Nicht-Kniffel: Canvas-Stream-Overlay
 document.getElementById('spectator-overlay')?.remove();
 const overlay=document.createElement('div');
 overlay.id='spectator-overlay';
