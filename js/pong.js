@@ -106,7 +106,7 @@ if(s2>=WIN){over=true; document.getElementById('g-status').textContent=p2name+t(
 wait=55;
 }
 
-// Draw
+// Zeichnen
 function draw(){
 ctx.fillStyle='#05050f';
 ctx.fillRect(0,0,W,H);
