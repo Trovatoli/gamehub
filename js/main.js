@@ -1,11 +1,11 @@
 async function updateStats(){
 if(currentUser){
-// Load avatar from localStorage
+// Avatar aus localStorage laden
 try{const u=JSON.parse(localStorage.getItem('ghUser')||'{}');if(u.avatar)currentUser.avatar=u.avatar;}catch(e){}
 if(currentUser.scores&&Object.keys(currentUser.scores).length>0){
 currentUser.total=Object.values(currentUser.scores).reduce((a,b)=>a+b,0);
 }
-// Read from dedicated keys
+// Aus dedizierten Keys lesen
 try{
 const saved=JSON.parse(localStorage.getItem('gh_scores')||'{}');
 const total=parseInt(localStorage.getItem('gh_total')||'0');
@@ -13,12 +13,12 @@ if(Object.keys(saved).length>0){currentUser.scores=saved;}
 if(total>0){currentUser.total=total;}
 }catch(ex){}
 const _sp=document.getElementById('stat-pts');if(_sp)_sp.textContent=(currentUser.total||0).toLocaleString();
-// Update avatar everywhere
+// Avatar überall aktualisieren
 const ava2=currentUser.avatar||currentUser.name.slice(0,2).toUpperCase();
 const isEmoji2=currentUser.avatar&&currentUser.avatar.length<=2;
 ['sb-av','top-av'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=ava2;el.style.fontSize=isEmoji2?'16px':'10px';}});
 const pav=document.getElementById('profile-av-display');if(pav){pav.textContent=ava2;pav.style.fontSize=isEmoji2?'24px':'20px';}
-// Best game
+// Bestes Spiel
 const scores=currentUser.scores||{};
 const gameNames=({snake:'🐍 '+t('game.snake'),pong:'🏓 '+t('game.pong'),vier:'🔴 '+t('game.vier'),battle:'🚢 '+t('game.battle'),kniffel:'🎲 '+t('game.kniffel')});
 const best=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
@@ -26,11 +26,11 @@ if(best){
 const _sbg=document.getElementById('stat-best-game');if(_sbg)_sbg.textContent=gameNames[best[0]]||best[0];
 const _sbp=document.getElementById('stat-best-pts');if(_sbp)_sbp.textContent=best[1]+' Pts';
 }
-// Friends count
+// Freundeanzahl
 const fEl=document.getElementById('stat-friends');
 if(fEl)fEl.textContent=friendsList.filter(f=>f.online).length+'/'+friendsList.length;
 }
-// Load leaderboard
+// Bestenliste laden
 try{
 const res=await apiCall('leaderboard','GET');
 if(res&&res.leaderboard&&Array.isArray(res.leaderboard)){
@@ -53,7 +53,7 @@ ${isOnline?'<div class="dot dot-on" style="margin-right:4px"></div>':''}
 ${!isMe&&!isFriend&&fbUser?`<button onclick="sendFriendRequest('${u.uid}','${u.name}')" style="padding:2px 7px;background:var(--c1);color:#000;border:none;border-radius:4px;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;margin-left:4px">+ Freund</button>`:''}
 </div>`;
 }).join('')||'<div style="padding:14px;color:var(--muted);font-size:12px;text-align:center">Noch keine Einträge</div>';
-// My rank
+// Mein Rang
 const myRank=res.leaderboard.findIndex(u=>u.uid===fbUser?.uid);
 const rankEl=document.getElementById('stat-rank');
 if(rankEl)rankEl.textContent=myRank>=0?'#'+(myRank+1):'#—';
@@ -77,7 +77,7 @@ if(Array.isArray(res.friends)){
 if(typeof renderFriendRequests==="function"){
   renderFriendRequests();
 } else {
-  // Fallback: render requests manually
+  // Fallback: Anfragen manuell rendern
   const sec=document.getElementById('friend-requests-section');
   if(sec&&pendingRequests.length){
     sec.style.display='block';
@@ -110,7 +110,7 @@ const el=document.getElementById('account-content');
 if(!el)return;
 
 if(fbUser&&currentUser){
-// Logged in view
+// Ansicht für eingeloggte Nutzer
 const scores=Object.entries(currentUser.scores||{}).map(([g,sc])=>{
 const n=({snake:'🐍 '+t('game.snake'),pong:'🏓 '+t('game.pong'),vier:'🔴 '+t('game.vier'),battle:'🚢 '+t('game.battle'),kniffel:'🎲 '+t('game.kniffel')});
 return '<div class="score-row"><span class="score-game">'+(n[g]||g)+'</span><span class="score-val">'+sc+'</span></div>';
@@ -147,7 +147,7 @@ document.getElementById('logout-btn').addEventListener('click', doLogout);
 return;
 }
 
-// Logged out view
+// Ansicht für ausgeloggte Nutzer
 el.innerHTML=
 '<div class="auth-card">'+
 '<div class="auth-title">🎮 GameHub</div>'+
@@ -176,14 +176,14 @@ el.innerHTML=
 '<div style="margin-top:12px;font-size:10px;color:#3a3a5a;text-align:center">☁ '+t('auth.firebase.hint')+'</div>'+
 '</div>';
 
-// Wire up events with addEventListener (reliable, no onclick in HTML)
+// Events mit addEventListener verknüpfen (zuverlässig, kein onclick im HTML)
 const tabL=document.getElementById('tab-login');
 const tabR=document.getElementById('tab-register');
 if(tabL)tabL.addEventListener('click',()=>switchTab('login'));
 if(tabR)tabR.addEventListener('click',()=>switchTab('register'));
 document.getElementById('btn-login').addEventListener('click', doLogin);
 document.getElementById('btn-register').addEventListener('click', doRegister);
-// Enter key support
+// Unterstützung für Enter-Taste
 ['inp-email','inp-pass'].forEach(id=>{
 const el=document.getElementById(id);
 if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
@@ -195,7 +195,7 @@ if(el)el.addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
 }
 
 function switchTab(mode){
-// Update tab buttons
+// Tab-Buttons aktualisieren
 ['tab-login','tab-register'].forEach(id=>{
 const btn=document.getElementById(id);
 if(!btn)return;
@@ -204,12 +204,12 @@ btn.style.borderColor=active?'var(--c1)':'var(--border)';
 btn.style.background=active?'rgba(0,245,255,.1)':'transparent';
 btn.style.color=active?'var(--c1)':'var(--muted)';
 });
-// Show/hide forms
+// Formulare ein-/ausblenden
 const fl=document.getElementById('form-login');
 const fr=document.getElementById('form-register');
 if(fl)fl.style.display=mode==='login'?'block':'none';
 if(fr)fr.style.display=mode==='register'?'block':'none';
-// Clear message
+// Nachricht zurücksetzen
 const msg=document.getElementById('auth-msg');
 if(msg)msg.style.display='none';
 }
@@ -272,7 +272,7 @@ const r=authMode==='login'?login(name,pass):register(name,pass);
 if(r.ok){showAuthMsg(authMode==='login'?t('auth.welcome.back')+name+'! 👋':t('auth.welcome.new')+name+'! 🎉',true);setTimeout(renderAccount,800);}
 else showAuthMsg(r.msg,false);
 }
-// Auto-restore session
+// Sitzung automatisch wiederherstellen
 (()=>{
 try{
 const ghScores=JSON.parse(localStorage.getItem('gh_scores')||'{}');
@@ -291,18 +291,18 @@ updateUserUI();
 }catch(e){}
 })();
 
-// Initialize Firebase on load - wait for DOM+scripts to be ready
+// Firebase beim Laden initialisieren - warten bis DOM+Skripte bereit sind
 if(document.readyState==='loading'){
 document.addEventListener('DOMContentLoaded',()=>{try{initFirebase();}catch(e){console.warn('Firebase init:',e);}});
 }else{
 try{initFirebase();}catch(e){console.warn('Firebase init:',e);}
 }
 
-// Restore language preference on load
+// Sprachpräferenz beim Laden wiederherstellen
 
 (()=>{try{const th=localStorage.getItem('ghtheme');if(th)document.body.className='theme-'+th;}catch(e){}try{const l=localStorage.getItem('ghlang');var isEn=l&&l!=='de';{currentLang=l;applyTranslations();document.querySelectorAll('.lang-btn').forEach(b=>{const oc=b.getAttribute('onclick')||'';b.classList.toggle('active',oc.includes("'"+l+"'"));});}}catch(e){}})();
 
-// ── AUTH GATE ──────────────────────────────────────────────────────────────
+// ANMELDE-SPERRE 
 function gateShowMsg(msg, ok) {
 const el = document.getElementById('gate-msg');
 if (!el) return;
@@ -363,7 +363,7 @@ gateShowMsg(res?.msg || t('auth.register.error'));
 }
 }
 
-// Enter key support for gate inputs
+// Unterstützung für Enter-Taste bei Gate-Eingaben
 document.addEventListener('DOMContentLoaded', () => {
 ['gate-email','gate-pass'].forEach(id => {
 const el = document.getElementById(id);
@@ -374,7 +374,7 @@ const el = document.getElementById(id);
 if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') gateDoRegister(); });
 });
 
-// Apply language to gate
+// Sprache auf Gate anwenden
 const lang = (() => { try { return localStorage.getItem('ghlang') || 'de'; } catch(e) { return 'de'; } })();
 const isEn = lang !== 'de';
 const subtitle = document.getElementById('gate-subtitle');
@@ -392,7 +392,7 @@ if (emailIn) emailIn.placeholder = isEn ? 'your@email.com' : 'deine@email.de';
 const emailIn2 = document.getElementById('gate-email2');
 if (emailIn2) emailIn2.placeholder = isEn ? 'your@email.com' : 'deine@email.de';
 
-// Show or hide gate: only if valid saved session exists
+// Gate anzeigen oder ausblenden: nur wenn eine gültige gespeicherte Sitzung existiert
 initFirebase();
 const _hasToken = !!(localStorage.getItem('ghToken') && localStorage.getItem('ghUser'));
 if (_hasToken && currentUser) {
@@ -400,7 +400,7 @@ gateHide();
 }
 });
 
-// ── Chat Panel Overlay ──────────────────────────────────────────
+// Chat Panel Overlay
 let _cpoPanelOpen = false;
 let _cpoActiveFriend = null;
 
@@ -414,7 +414,7 @@ function toggleChatPanel(el) {
   } else {
     panel.classList.remove('open');
   }
-  // Update nav active state
+ // Aktiven Nav-Status aktualisieren
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   if (_cpoPanelOpen && el) el.classList.add('active');
 }
@@ -450,7 +450,7 @@ function _cpoOpenFriend(uid, name) {
   const sendBtn = document.getElementById('cpo-send-btn');
   if (input) { input.disabled = false; input.placeholder = 'Nachricht an ' + name + '...'; input.focus(); }
   if (sendBtn) sendBtn.disabled = false;
-  // Load DM history
+  // DM-Verlauf laden
   const msgs = document.getElementById('cpo-msgs');
   if (!msgs) return;
   msgs.innerHTML = '<div style="color:var(--muted);font-size:11px;text-align:center;margin-bottom:8px;">' + name + '</div>';
@@ -474,7 +474,7 @@ function sendCpoMsg() {
   const text = input?.value?.trim();
   if (!text) return;
   input.value = '';
-  // Add to UI
+  // Zur UI hinzufügen
   const msgs = document.getElementById('cpo-msgs');
   if (msgs) {
     const div = document.createElement('div');
@@ -483,11 +483,11 @@ function sendCpoMsg() {
     msgs.appendChild(div);
     msgs.scrollTop = msgs.scrollHeight;
   }
-  // Send via WS
+  // Über WS senden
   if (socialWs && socialWs.readyState === 1) {
     socialWs.send(JSON.stringify({type:'dm', to: _cpoActiveFriend, text, from: fbUser?.uid, fromName: currentUser?.name || fbUser?.name || 'Du'}));
   }
-  // Save locally
+  // Lokal speichern
   try {
     const dmKey = 'dms_' + [fbUser?.uid, _cpoActiveFriend].sort().join('_');
     const stored = JSON.parse(localStorage.getItem(dmKey) || '[]');
@@ -496,7 +496,7 @@ function sendCpoMsg() {
   } catch(e) {}
 }
 
-// ── Auth Gate: Language + Theme toggles ─────────────────────────
+// Anmelde-Sperre: Sprache + Theme umschalten 
 const _gateThemes = ['neon', 'light', 'retro'];
 const _gateThemeNames = { 'neon': '🌟 Neon', 'light': '☀ Hell', 'retro': '💾 Retro' };
 
