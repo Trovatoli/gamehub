@@ -1,5 +1,5 @@
 function initSnake(opts){  const C=document.getElementById('gc');
-const {w:_aw,h:_ah}=getCanvasArea();  // Fixed grid for online sync compatibility
+const {w:_aw,h:_ah}=getCanvasArea();  // Feste Rastergröße für Online-Sync-Kompatibilität
 const COLS=opts.isOnline?27:Math.max(20,Math.floor(_aw/Math.max(14,Math.min(Math.floor(_aw/27),Math.floor(_ah/22)))));
 const ROWS=opts.isOnline?22:Math.max(15,Math.floor(_ah/Math.max(14,Math.min(Math.floor(_aw/27),Math.floor(_ah/22)))));
 const S=Math.min(Math.floor(_aw/COLS),Math.floor(_ah/ROWS));
@@ -27,15 +27,15 @@ let snake2=isLocal2P?[
 {x:Math.floor(COLS*0.75)+2,y:Math.floor(ROWS*0.5)}
 ]:null;
 let dir2={x:-1,y:0},nextDir2={x:-1,y:0},dead2=false,score2=0;
-// AI snake starts on opposite side
+// KI-Schlange startet auf der gegenüberliegenden Seite
 let aiSnake=(isLocal2P||opts.isOnline)?[]:[{x:18,y:10},{x:19,y:10},{x:20,y:10}];
 let aiDir={x:-1,y:0};
 let food=placeFood();
 let score=0,aiScore=0;
-// Online: opponent snake (received via WS)
+// Online: gegnerische Schlange (über WS empfangen)
 let oppSnake=[];let oppScore=0;let oppName=opts.opponentName||'Gegner';
 let _lastOppSync=0;let _oppDir={x:1,y:0};
-// Online prediction vars (scoped to function so onKey can access)
+// Online-Vorhersage-Variablen (im Funktionsscope, damit onKey zugreifen kann)
 let localDir={x:1,y:0};
 let localNextDir={x:1,y:0};
 let localSnake=[];
@@ -54,25 +54,25 @@ return f;
 }
 
 function moveAI(){
-// AI chases food, avoids walls and self
+// KI jagt das Futter, weicht Wänden und sich selbst aus
 const head=aiSnake[0];
 const dx=food.x-head.x, dy=food.y-head.y;
-// Try preferred direction (toward food), fallback to alternatives
+// Bevorzugte Richtung versuchen (Richtung Futter), sonst Alternativen
 const preferred=[];
 if(Math.abs(dx)>=Math.abs(dy)){
 preferred.push({x:dx>0?1:-1,y:0},{x:0,y:dy>0?1:-1});
 }else{
 preferred.push({x:0,y:dy>0?1:-1},{x:dx>0?1:-1,y:0});
 }
-// Add remaining directions as fallback
+// Verbleibende Richtungen als Fallback hinzufügen
 [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}].forEach(d=>{
 if(!preferred.find(p=>p.x===d.x&&p.y===d.y)) preferred.push(d);
 });
 for(const d of preferred){
-// No 180 turns
+// Keine 180-Grad-Wenden
 if(d.x===-aiDir.x&&d.y===-aiDir.y) continue;
 const nx=(head.x+d.x+COLS)%COLS, ny=(head.y+d.y+ROWS)%ROWS;
-// Avoid self and walls
+// Sich selbst und Wände vermeiden
 if(aiSnake.some(seg=>seg.x===nx&&seg.y===ny)) continue;
 if(WALLS.some(w=>w.x===nx&&w.y===ny)) continue;
 aiDir=d; break;
@@ -90,20 +90,20 @@ aiSnake.pop();
 
 function draw(){
 ctx.fillStyle='#05050f';ctx.fillRect(0,0,C.width,C.height);
-// grid
+// Raster
 ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=.5;
 for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*S,0);ctx.lineTo(x*S,ROWS*S);ctx.stroke();}
 for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*S);ctx.lineTo(COLS*S,y*S);ctx.stroke();}
-// walls
+// Wände
 WALLS.forEach(w=>{
 ctx.fillStyle='#2a2a6a';ctx.fillRect(w.x*S+1,w.y*S+1,S-2,S-2);
 ctx.strokeStyle='rgba(100,100,200,.5)';ctx.lineWidth=1;ctx.strokeRect(w.x*S+1,w.y*S+1,S-2,S-2);
 });
-// food
+// Futter
 ctx.shadowColor='#00ff88';ctx.shadowBlur=14;ctx.fillStyle='#00ff88';
 ctx.beginPath();ctx.arc(food.x*S+S/2,food.y*S+S/2,S/2-3,0,Math.PI*2);ctx.fill();
 ctx.shadowBlur=0;
-// snake
+// Schlange
 snake.forEach((seg,i)=>{
 const alpha=i===0?1:Math.max(0.2,1-i/snake.length*0.7);
 ctx.shadowBlur=i===0?10:0;ctx.shadowColor='#00f5ff';
@@ -111,7 +111,7 @@ ctx.fillStyle=`rgba(0,245,255,${alpha})`;
 ctx.fillRect(seg.x*S+1,seg.y*S+1,S-2,S-2);
 });
 ctx.shadowBlur=0;ctx.globalAlpha=1;
-// Player 2 snake
+// Schlange von Spieler 2
 if(isLocal2P&&snake2){
 snake2.forEach((seg,i)=>{
 const alpha=i===0?1:Math.max(0.2,1-i/snake2.length*0.7);
@@ -123,7 +123,7 @@ ctx.fillRect(seg.x*S+1,seg.y*S+1,S-2,S-2);
 ctx.shadowBlur=0;ctx.globalAlpha=1;
 });
 }
-// Online opponent snake
+// Online-Gegner-Schlange
 if(opts.isOnline&&oppSnake.length>0){
 oppSnake.forEach((seg,i)=>{
 const alpha=i===0?1:Math.max(0.2,1-i/oppSnake.length*0.7);
@@ -138,7 +138,7 @@ ctx.fillStyle=PLAYER_COLORS[1];ctx.font='bold 9px monospace';ctx.textAlign='cent
 ctx.fillText(oppName,oh.x*S+S/2,oh.y*S+S/2+3);ctx.textAlign='left';
 }
 }
-// AI snake
+// KI-Schlange
 if(aiSnake.length>0){aiSnake.forEach((seg,i)=>{
 const alpha=i===0?1:Math.max(0.15,1-i/aiSnake.length*0.7);
 ctx.shadowBlur=i===0?10:0;ctx.shadowColor='#b94fff';
@@ -147,13 +147,13 @@ ctx.fillRect(seg.x*S+1,seg.y*S+1,S-2,S-2);
 ctx.shadowBlur=0;
 });}
 ctx.shadowBlur=0;
-// AI label on head
+// KI-Beschriftung am Kopf
 if(aiSnake.length){
 const ah=aiSnake[0];
 ctx.fillStyle='rgba(185,79,255,.7)';ctx.font='bold 9px monospace';ctx.textAlign='center';
 ctx.fillText('KI',ah.x*S+S/2,ah.y*S+S/2+3);ctx.textAlign='left';
 }
-// scores
+// Punktestände
 ctx.fillStyle='rgba(0,245,255,.5)';ctx.font='bold 11px monospace';ctx.textAlign='left';
 ctx.fillText(t('score.you')+': '+score,6,C.height-6);
 ctx.fillStyle='rgba(185,79,255,.5)';ctx.textAlign='right';
@@ -164,16 +164,16 @@ ctx.fillText(t('score.ai')+': '+aiScore,C.width-6,C.height-6);ctx.textAlign='lef
 function onKey(e){
 if(opts.isOnline)return;
 if(e.key==='p'||e.key==='P'){togglePause();return;}
-// Accept BOTH arrow keys and WASD always (online always accepts both)
+// IMMER sowohl Pfeiltasten als auch WASD akzeptieren (online werden immer beide akzeptiert)
 const arrowMap={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0}};
 const wasdMap={w:{x:0,y:-1},W:{x:0,y:-1},s:{x:0,y:1},S:{x:0,y:1},a:{x:-1,y:0},A:{x:-1,y:0},d:{x:1,y:0},D:{x:1,y:0}};
 const useWASD=opts.ctrl==='WASD';
-// Online: always accept both WASD and arrow keys
+// Online: immer sowohl WASD als auch Pfeiltasten akzeptieren
 const map1=opts.isOnline ? {...arrowMap,...wasdMap} : (useWASD ? wasdMap : arrowMap);
 const dir_d=map1[e.key];
 if(dir_d){
 if(opts.isOnline){
-// Use localNextDir as reference for reverse-check
+// localNextDir als Referenz für die Rückwärts-Prüfung verwenden
 const curDir=localNextDir&&(localNextDir.x!==0||localNextDir.y!==0)?localNextDir:localDir;
 if(!(dir_d.x===-curDir.x&&dir_d.y===-curDir.y)){
 localNextDir=dir_d;
@@ -187,7 +187,7 @@ nextDir=dir_d;
 e.preventDefault();
 }
 }
-// Player 2 (local human)
+// Spieler 2 (lokaler Mensch)
 if(isLocal2P&&snake2&&!dead2){
 const p2ctrl=opts.players?.[1]?.ctrl||'';
 const useWASD2=p2ctrl==='WASD';
@@ -198,7 +198,7 @@ const dir_d2=map2[e.key];
 if(dir_d2&&!(dir_d2.x===-dir2.x&&dir_d2.y===-dir2.y)){nextDir2=dir_d2;e.preventDefault();}
 }
 }
-// ── Online rematch ───────────────────────────
+// Online-Rematch 
 if(opts.isOnline&&opts.onlineRoomId){
 const myRole=opts.isHost?'p1':'p2';
 const oppRole=opts.isHost?'p2':'p1';
@@ -208,7 +208,7 @@ currentGame._ws=gameWs;
 
 const TICK_MS=150;
 
-// Key handler — own separate handler for online
+// Tasten-Handler — eigener separater Handler für online
 const arrowMap={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0}};
 const wasdMap={w:{x:0,y:-1},W:{x:0,y:-1},s:{x:0,y:1},S:{x:0,y:1},a:{x:-1,y:0},A:{x:-1,y:0},d:{x:1,y:0},D:{x:1,y:0}};
 const ctrlMap=opts.ctrl==='WASD'?wasdMap:arrowMap;
@@ -217,9 +217,9 @@ function onKeyOnline(e){
 if(e.key==='p'||e.key==='P'){togglePause();return;}
 const nd=ctrlMap[e.key];
 if(!nd)return;
-if(nd.x===-dir.x&&nd.y===-dir.y)return; // no 180
+if(nd.x===-dir.x&&nd.y===-dir.y)return; // keine 180-Grad-Wende
 nextDir=nd;
-// Apply direction locally IMMEDIATELY for zero-latency feel
+// Richtung SOFORT lokal anwenden, für ein latenzfreies Gefühl
 dir=nd;
 if(gameWs.readyState===1)
 gameWs.send(JSON.stringify({type:'snakeDir',dir:nd}));
@@ -227,45 +227,45 @@ e.preventDefault();
 }
 document.addEventListener('keydown',onKeyOnline);
 
-// Local tick — own snake runs fully locally
+// Lokaler Tick — eigene Schlange läuft vollständig lokal
 let _tickId=null;
 let _rafActive=true;
 let _rafId=null;
 let _gameStarted=false;
 
-// Local prediction tick - moves own snake immediately, server corrects
+// Lokaler Vorhersage-Tick - bewegt eigene Schlange sofort, Server korrigiert
 let _localTickId=null;
 function localPredictTick(){
 if(dead||paused||!_gameStarted)return;
 dir=nextDir;
 const head={x:(snake[0].x+dir.x+COLS)%COLS,y:(snake[0].y+dir.y+ROWS)%ROWS};
-// Only self-collision locally (server handles all authoritative collisions)
+// Nur lokale Selbstkollision (Server behandelt alle maßgeblichen Kollisionen)
 snake.unshift({x:head.x,y:head.y});
 if(head.x===food.x&&head.y===food.y){
 score+=10;document.getElementById('s1').textContent=score;
 } else {snake.pop();}
 }
 
-// Draw: own snake local + opponent interpolated
+// Zeichnen: eigene Schlange lokal + Gegner interpoliert
 let _oppPrev=[],_oppNext=[],_oppLerpStart=0;
 function drawOnline(){
 ctx.fillStyle='#05050f';ctx.fillRect(0,0,C.width,C.height);
 ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=.5;
 for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*S,0);ctx.lineTo(x*S,ROWS*S);ctx.stroke();}
 for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*S);ctx.lineTo(COLS*S,y*S);ctx.stroke();}
-// Food
+// Futter
 const pulse=0.87+0.13*Math.sin(Date.now()*0.006);
 ctx.shadowColor='#00ff88';ctx.shadowBlur=16*pulse;ctx.fillStyle='#00ff88';
 ctx.beginPath();ctx.arc(food.x*S+S/2,food.y*S+S/2,(S/2-2)*pulse,0,Math.PI*2);ctx.fill();
 ctx.shadowBlur=0;
-// Own snake (cyan)
+// Eigene Schlange (Cyan)
 snake.forEach((seg,i)=>{
 ctx.globalAlpha=dead?0.3:Math.max(0.2,1-i/snake.length*0.7);
 ctx.shadowBlur=i===0?12:0;ctx.shadowColor='#00f5ff';ctx.fillStyle='#00f5ff';
 ctx.fillRect(seg.x*S+1,seg.y*S+1,S-2,S-2);
 ctx.shadowBlur=0;ctx.globalAlpha=1;
 });
-// Opponent (purple, interpolated)
+// Gegner (Lila, interpoliert)
 if(_oppNext.length){
 const prog=_oppLerpStart>0?Math.min(1,(Date.now()-_oppLerpStart)/TICK_MS):1;
 const src=_oppPrev.length===_oppNext.length?_oppPrev:_oppNext;
@@ -298,25 +298,25 @@ const me=msg[myRole],opp=msg[oppRole];
 if(!me||!opp)return;
 if(!_gameStarted){
 _gameStarted=true;
-// Sync start position from server
+// Startposition vom Server synchronisieren
 snake.length=0;
 me.snake.forEach(seg=>snake.push({x:seg.x,y:seg.y}));
 dir=opts.isHost?{x:1,y:0}:{x:-1,y:0};
 nextDir={...dir};
 food=msg.food;
 document.getElementById('g-status').textContent='';
-// Prediction: move immediately on first server state
+// Vorhersage: bei erstem Server-Zustand sofort bewegen
 }
-// Sync everything from server - server is authoritative
+// Alles vom Server synchronisieren - Server ist maßgeblich
 food=msg.food;
 score=me.score||score;document.getElementById('s1').textContent=score;
 oppScore=opp.score||0;document.getElementById('s2').textContent=oppScore;
-// Apply server state, then predict one step ahead
+// Server-Zustand anwenden, dann einen Schritt vorausschauen
 if(me.snake&&me.snake.length&&!dead){
-// Snap to server position
+// Auf Server-Position springen
 snake.length=0;
 me.snake.forEach(seg=>snake.push({x:seg.x,y:seg.y}));
-// Predict next step immediately (hides network latency)
+// Nächsten Schritt sofort vorhersagen (verbirgt Netzwerklatenz)
 const pd=nextDir;
 const ph={x:(snake[0].x+pd.x+COLS)%COLS,y:(snake[0].y+pd.y+ROWS)%ROWS};
 if(!snake.some(seg=>seg.x===ph.x&&seg.y===ph.y)){
@@ -324,13 +324,13 @@ snake.unshift({x:ph.x,y:ph.y});
 if(ph.x!==food.x||ph.y!==food.y)snake.pop();
 }
 }
-// Opponent interpolation
+// Gegner-Interpolation
 _oppPrev=_oppNext.length?_oppNext:opp.snake.slice();
 _oppNext=opp.snake.slice();_oppLerpStart=Date.now();oppSnake=opp.snake||[];
-// Game over
+// Spielende
 if(msg.over||(me.dead&&!dead)){
 dead=true;_rafActive=false;
-// Snap to server positions for accurate death display
+// Auf Server-Positionen springen für korrekte Todesanzeige
 if(me.snake&&me.snake.length){snake.length=0;me.snake.forEach(seg=>snake.push(seg));}
 if(opp.snake&&opp.snake.length){oppSnake=opp.snake.slice();}
 const iWon=!me.dead&&opp.dead;
@@ -357,7 +357,7 @@ showToast(t('opp.quit'));dead=true;_rafActive=false;showOnlineRematch(opts,true)
 
 gameWs.onclose=()=>{if(!dead)showToast(t('conn.lost'));};
 
-// 60fps render loop
+// 60fps-Render-Schleife
 (function _raf(){
 if(!_rafActive)return;
 _rafId=requestAnimationFrame(_raf);
@@ -379,22 +379,22 @@ document.addEventListener('keydown',onKey);
 currentGame._rafActive=true;
 let _lastTick2=0;
 
-// AI snake movement
+// Bewegung der KI-Schlange
 function aiStep(){
 if(!aiSnake||!aiSnake.length)return null;
 const head=aiSnake[0];
 const dirs=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
-// Filter out reversal
+// Umkehrung herausfiltern
 const validDirs=dirs.filter(d=>{
 const nx=(head.x+d.x+COLS)%COLS, ny=(head.y+d.y+ROWS)%ROWS;
-// Avoid walls, self, player snake
+// Wände, sich selbst und die Spieler-Schlange vermeiden
 if(WALLS.some(w=>w.x===nx&&w.y===ny))return false;
 if(aiSnake.some(s=>s.x===nx&&s.y===ny))return false;
 if(snake.some(s=>s.x===nx&&s.y===ny))return false;
 return true;
 });
 if(!validDirs.length)return null;
-// Move toward food
+// Richtung Futter bewegen
 const best=validDirs.reduce((a,d)=>{
 const nx=(head.x+d.x+COLS)%COLS, ny=(head.y+d.y+ROWS)%ROWS;
 const dist=Math.abs(nx-food.x)+Math.abs(ny-food.y);
@@ -442,16 +442,16 @@ showLocalRematch('');
 }
 draw();return;
 }
-// Move snake
+// Schlange bewegen
 snake.unshift(head);
 if(head.x===food.x&&head.y===food.y){
 score+=10;document.getElementById('s1').textContent=score;
 sndScore();food=placeFood();
 } else { snake.pop(); }
-// AI snake move
+// Bewegung der KI-Schlange
 if(aiSnake&&aiSnake.length){
 const aiHead=aiStep();
-if(!aiHead){/* ai stuck */}
+if(!aiHead){}
 else{
 aiSnake.unshift(aiHead);
 if(aiHead.x===food.x&&aiHead.y===food.y){aiScore+=10;document.getElementById('s2').textContent=aiScore;food=placeFood();}
@@ -459,7 +459,7 @@ else{aiSnake.pop();}
 }
 
 }
-// P2 local
+// P2 lokal
 if(isLocal2P&&snake2&&snake2.length&&!dead2){
 dir2=nextDir2;
 const h2={x:(snake2[0].x+dir2.x+COLS)%COLS,y:(snake2[0].y+dir2.y+ROWS)%ROWS};
@@ -475,8 +475,8 @@ else{snake2.pop();}
 }
 }
 
-} // close speed check
-})(0); // end RAF IIFE
+} // Ende der Geschwindigkeitsprüfung
+})(0); // Ende der RAF-IIFE
 
 currentGame._cleanup=()=>{
 currentGame._rafActive=false;
@@ -485,7 +485,5 @@ const gd=document.getElementById('snake-gameover');if(gd)gd.remove();
 if(currentGame._ws)try{currentGame._ws.close();}catch(ex){}
 };
 draw();
-} // end if(!opts.isOnline)
-} // end initSnake
-
-// ── Online sync ──────────────────────────────
+} 
+} 
