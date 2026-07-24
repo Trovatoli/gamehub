@@ -2,8 +2,8 @@ function initPacman(opts){
 const modern  = opts.mode==='Modern';
 const useWASD = opts.ctrl==='WASD';
 
-// ── AUTHENTIC PAC-MAN MAP 28×31 ─────────────────
-// # wall  . dot  o power  ' ' empty  H house  D door
+// PAC-MAN-KARTE 28×31
+// # Wand  . Punkt  o Powerpille  ' ' leer  H Haus  D Tür
 const RAW=[
 '############################',  // 0
 '#............##............#',  // 1
@@ -19,7 +19,7 @@ const RAW=[
 '######.##          ##.######',  // 11
 '######.## ###DD### ##.######',  // 12
 '######.## #HHHHHH# ##.######',  // 13
-'       .  #HHHHHH#  .       ',  // 14  tunnel row
+'       .  #HHHHHH#  .       ',  // 14   Tunnelreihe
 '######.## #HHHHHH# ##.######',  // 15
 '######.## ######## ##.######',  // 16
 '######.##          ##.######',  // 17
@@ -38,11 +38,11 @@ const RAW=[
 '############################',  // 30
 ];
 
-// Normalize all rows to exactly 28 chars
+// Alle Zeilen auf genau 28 Zeichen normalisieren
 const COLS=28, ROWS=RAW.length;
 const norm=RAW.map(r=>r.length===COLS?r:r.padEnd(COLS,' ').slice(0,COLS));
 
-// Parse to numbers: 1=wall 0=dot 2=empty 3=power 4=house 5=door
+// In Zahlen umwandeln: 1=Wand 0=Punkt 2=leer 3=Powerpille 4=Haus 5=Tür
 function parseMap(){
 return norm.map(row=>row.split('').map(ch=>{
 if(ch==='#')return 1;
@@ -55,16 +55,16 @@ return 2;
 }
 let map=parseMap();
 
-// ── CANVAS ──────────────────────────────────────
+// CANVAS 
 const C=document.getElementById('gc');
-// Compute tile size to fit container while keeping square tiles
+// Kachelgröße berechnen, damit sie in den Container passt und quadratisch bleibt
 const _pac_area=document.getElementById('canvas-area');
 const _pac_w=_pac_area?Math.max(_pac_area.clientWidth,400):560;
 const _pac_h=_pac_area?Math.max(_pac_area.clientHeight,400):660;
-// TS must be integer and same for both dims (square tiles)
+// TS muss eine Ganzzahl sein und für beide Dimensionen gleich (quadratische Kacheln)
 const TS=Math.max(14,Math.floor(Math.min(_pac_w/COLS,(_pac_h-20)/ROWS)));
 C.width=COLS*TS; C.height=ROWS*TS+20;
-// Center canvas in container via CSS
+// Canvas per CSS im Container zentrieren
 C.style.display='block';
 C.style.margin='auto';
 const ctx=C.getContext('2d');
@@ -74,16 +74,16 @@ document.getElementById('g-title').textContent='Pac-Man';
 document.getElementById('g-status').textContent=(useWASD?'WASD':t('pacman.ctrl'))+' | '+t('pacman.pause');
 document.getElementById('g-status').textContent=t('pacman.pellet.hint');
 
-// Key coordinates from map
+// Wichtige Koordinaten aus der Karte
 const DOOR_ROW=12, DOOR_COL_L=13, DOOR_COL_R=14;
-const EXIT_TX=13, EXIT_TY=11; // just above door, ghosts aim here when leaving
+const EXIT_TX=13, EXIT_TY=11;  // direkt über der Tür, hier zielen Geister hin, wenn sie das Haus verlassen
 const HOUSE_CX=13, HOUSE_CY=14;
 const PAC_START_TX=13, PAC_START_TY=23;
 
 function countDots(){return map.flat().filter(v=>v===0||v===3).length;}
 let dotsLeft=countDots();
 
-// ── GAME STATE ───────────────────────────────────
+  // SPIELZUSTAND 
 let phase='play',phaseTimer=0;
 let score=0,lives=3,level=1;
 let frightTimer=0,eatCombo=0;
@@ -92,11 +92,11 @@ let modeTimer=0,modeStep=0;
 const MODE_DUR=[420,1200,420,1200,300,1200,300,Infinity];
 let globalMode='scatter';
 
-// ── PAC ─────────────────────────────────────────
+// PAC
 const PAC_SPEED=7;
 let pac={tx:PAC_START_TX,ty:PAC_START_TY,dx:0,dy:0,wx:0,wy:0,tmr:0,mouth:0.08,mdir:1};
 
-// ── GHOSTS ──────────────────────────────────────
+// GEISTER
 const GDEFS=[
 {name:'Blinky',col:'#FF0000',hx:13,hy:11,exitDelay:0,  outside:true, scx:25,scy:0 },
 {name:'Pinky', col:'#FFB8FF',hx:13,hy:14,exitDelay:60, outside:false,scx:2, scy:0 },
@@ -115,7 +115,7 @@ col:d.col, name:d.name, def:d,
 }
 let ghosts=makeGhosts();
 
-// ── TILE HELPERS ─────────────────────────────────
+// KACHEL-HILFSFUNKTIONEN
 function tileAt(tx,ty){
 if(ty<0||ty>=ROWS)return 1;
 return map[ty][(tx+COLS)%COLS]??1;
@@ -125,18 +125,18 @@ function pacCanWalk(tx,ty){const v=tileAt(tx,ty);return v!==1&&v!==4&&v!==5;}
 function ghostCanWalk(tx,ty,eaten){
 const v=tileAt(tx,ty);
 if(v===1)return false;
-if(eaten)return true; // eaten ghosts go anywhere to reach house
-if(v===4)return false; // normal ghosts can't enter house interior
-if(v===5)return true;  // ghosts CAN pass through door tile (entering or exiting)
+if(eaten)return true; // gefressene Geister dürfen überallhin, um das Haus zu erreichen
+if(v===4)return false; // normale Geister dürfen nicht ins Hausinnere
+if(v===5)return true;  // Geister DÜRFEN durch die Türkachel (beim Betreten oder Verlassen)
 return true;
 }
 
-// ── PAC MOVEMENT ────────────────────────────────
+// PAC-BEWEGUNG
 function stepPac(){
 pac.tmr++;
 if(pac.tmr<PAC_SPEED)return;
 pac.tmr=0;
-// Try queued direction
+// Vorgemerkte Richtung versuchen
 const wtx=wrapX(pac.tx+pac.wx),wty=pac.ty+pac.wy;
 if((pac.wx||pac.wy)&&pacCanWalk(wtx,wty)){pac.dx=pac.wx;pac.dy=pac.wy;}
 const nx=wrapX(pac.tx+pac.dx),ny=pac.ty+pac.dy;
@@ -154,7 +154,7 @@ if(dotsLeft<=0){phase='levelwin';phaseTimer=0;}
 }
 }
 
-// ── GHOST MOVEMENT ───────────────────────────────
+// GEISTER-BEWEGUNG
 function ghostTarget(g,idx){
 if(g.eaten)return{tx:HOUSE_CX,ty:HOUSE_CY};
 if(g.fright)return{tx:(Math.random()*COLS)|0,ty:(Math.random()*ROWS)|0};
@@ -170,10 +170,10 @@ default:return{tx:pac.tx,ty:pac.ty};
 
 function stepGhost(g,idx){
 if(g.dead)return;
-// ── INSIDE HOUSE: bounce while waiting, then exit ──
+// IM HAUS: während des Wartens hin- und herspringen, dann verlassen
 if(g.inHouse&&!g.eaten){
 g.exitTimer--;
-// Bounce up/down inside house while waiting
+// Im Haus während des Wartens hoch- und runterspringen
 g.tmr++;
 if(g.tmr%16===0){
 const ny=g.ty+g.dy;
@@ -181,11 +181,11 @@ const v=tileAt(g.tx,ny);
 if(v===4){g.ty=ny;}else{g.dy*=-1;}
 }
 if(g.exitTimer>0)return;
-// EXIT PHASE: use separate exitStep counter
+// AUSGANGSPHASE: separaten exitStep-Zähler verwenden
 if(g.exitStep===undefined)g.exitStep=0;
 g.exitStep++;
-if(g.exitStep%8!==0)return; // move every 8 frames
-// Step 1: move horizontally to EXIT_TX
+if(g.exitStep%8!==0)return; // alle 8 Frames bewegen
+// Schritt 1: horizontal zu EXIT_TX bewegen
 if(g.tx!==EXIT_TX){
 const step=g.tx<EXIT_TX?1:-1;
 const nx=g.tx+step;
@@ -193,7 +193,7 @@ const v=tileAt(nx,g.ty);
 if(v===4||v===2||v===5||v===0||v===3)g.tx=nx;
 return;
 }
-// Step 2: move up through door and out
+// Schritt 2: durch die Tür nach oben und hinaus bewegen
 const ny=g.ty-1;
 const v=tileAt(g.tx,ny);
 if(v!==undefined&&v!==1){g.ty=ny;}
@@ -204,7 +204,7 @@ g.dx=0;g.dy=-1;g.tmr=0;
 return;
 }
 
-// ── NORMAL / FRIGHTENED / EATEN MOVEMENT ─────
+// NORMALE / ÄNGSTLICHE / GEFRESSENE BEWEGUNG 
 g.tmr++;
 let spd=9+Math.floor(level*0.5);
 if(g.fright)spd+=6;
@@ -217,10 +217,10 @@ const tgt=ghostTarget(g,idx);
 const DIRS=[{dx:0,dy:-1},{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0}];
 
 let cands=DIRS.filter(d=>{
-if(d.dx===-g.dx&&d.dy===-g.dy)return false; // no 180
+if(d.dx===-g.dx&&d.dy===-g.dy)return false; // keine 180-Grad-Wende
 return ghostCanWalk(wrapX(g.tx+d.dx),g.ty+d.dy,g.eaten);
 });
-// Fallback: allow reversal if stuck
+// Fallback: Umkehr erlauben, wenn feststeckt
 if(!cands.length){
 cands=DIRS.filter(d=>ghostCanWalk(wrapX(g.tx+d.dx),g.ty+d.dy,g.eaten));
 }
@@ -242,7 +242,7 @@ g.dead=true;g.eaten=false;g.fright=false;g.blink=false;
 }
 }
 
-// ── COLLISION ────────────────────────────────────
+// KOLLISION 
 function checkColl(){
 if(phase!=='play')return;
 ghosts.forEach(g=>{
@@ -268,26 +268,26 @@ if(modeStep>=MODE_DUR.length)globalMode='chase';
 }
 }
 
-// ── DRAW MAP ─────────────────────────────────────
+// KARTE ZEICHNEN 
 function drawMap(){
 const t=Date.now();
 const flash=phase==='levelwin'&&Math.floor(phaseTimer/6)%2===1;
 for(let ty=0;ty<ROWS;ty++)for(let tx=0;tx<COLS;tx++){
 const v=map[ty][tx];
 const px=tx*TS,py=ty*TS;
-// Background
+// Hintergrund
 ctx.fillStyle='#000';ctx.fillRect(px,py,TS,TS);
 if(v===1){
 ctx.fillStyle=flash?'#ffffff':'#1f1fff';
 ctx.fillRect(px,py,TS,TS);
-// Inner dark border to look like arcade walls
+// Innerer dunkler Rand, damit es wie Arcade-Wände aussieht
 ctx.fillStyle=flash?'#aaaaff':'#0000aa';
 ctx.fillRect(px+2,py+2,TS-4,TS-4);
 }else if(v===0){
 ctx.fillStyle='#ffcc88';
 ctx.beginPath();ctx.arc(px+TS/2,py+TS/2,2,0,Math.PI*2);ctx.fill();
 }else if(v===3){
-// Blinking power pellet
+// Blinkende Powerpille
 if(Math.floor(t/400)%2===0){
 ctx.fillStyle='#ffcc88';ctx.shadowColor='#ffaa44';ctx.shadowBlur=6;
 ctx.beginPath();ctx.arc(px+TS/2,py+TS/2,TS/2-2,0,Math.PI*2);ctx.fill();
@@ -296,14 +296,14 @@ ctx.shadowBlur=0;
 }else if(v===4){
 ctx.fillStyle='#1a0030';ctx.fillRect(px,py,TS,TS);
 }else if(v===5){
-// Door: dark bg with pink horizontal bar
+// Tür: dunkler Hintergrund mit pinkem horizontalem Balken
 ctx.fillStyle='#100015';ctx.fillRect(px,py,TS,TS);
 ctx.fillStyle='#ee88ee';ctx.fillRect(px,py+TS/2-1,TS,3);
 }
 }
 }
 
-// ── DRAW GHOST (clean pixel-art style) ──────────
+// GEIST ZEICHNEN (sauberer Pixel-Art-Stil) 
 function drawGhost(g){
 if(g.dead)return;
 const px=g.tx*TS, py=g.ty*TS;
@@ -311,7 +311,7 @@ const w=TS, h=TS;
 const cx=px+w/2, cy=py+h/2;
 
 if(g.eaten){
-// Just two white eyes with blue pupils
+// Nur zwei weiße Augen mit blauen Pupillen
 ctx.fillStyle='#ffffff';
 ctx.beginPath();ctx.ellipse(cx-w*0.2,cy-h*0.05,w*0.13,h*0.17,0,0,Math.PI*2);ctx.fill();
 ctx.beginPath();ctx.ellipse(cx+w*0.2,cy-h*0.05,w*0.13,h*0.17,0,0,Math.PI*2);ctx.fill();
@@ -324,16 +324,16 @@ return;
 const blink=g.blink&&Math.floor(Date.now()/160)%2===0;
 const bodyCol=g.fright?(blink?'#dddddd':'#2233dd'):g.col;
 
-// Body with glow
+// Körper mit Leuchten
 ctx.shadowColor=g.fright?(blink?'#aaa':'#0055ff'):g.col;
 ctx.shadowBlur=6;
 ctx.fillStyle=bodyCol;
-// Top dome
+// Obere Kuppel
 ctx.beginPath();
 ctx.arc(cx,py+h*0.48,w*0.46,Math.PI,0,false);
-// Right side down
+// Rechte Seite nach unten
 ctx.lineTo(px+w-1,py+h-1);
-// Wavy bottom: 3 bumps
+// Gewellter Boden: 3 Wellen
 const bw=w/3;
 ctx.quadraticCurveTo(px+bw*2.7,py+h-h*0.3, px+bw*2.35,py+h-1);
 ctx.quadraticCurveTo(px+bw*2.0,py+h-h*0.3, px+bw*1.65,py+h-1);
@@ -344,16 +344,16 @@ ctx.closePath();ctx.fill();
 ctx.shadowBlur=0;
 
 if(!g.fright){
-// White eye whites
+// Weißes Augenweiß
 ctx.fillStyle='#ffffff';
 ctx.beginPath();ctx.ellipse(cx-w*0.18,py+h*0.36,w*0.13,h*0.15,0,0,Math.PI*2);ctx.fill();
 ctx.beginPath();ctx.ellipse(cx+w*0.18,py+h*0.36,w*0.13,h*0.15,0,0,Math.PI*2);ctx.fill();
-// Blue pupils that follow movement direction
+// Blaue Pupillen, die der Bewegungsrichtung folgen
 ctx.fillStyle='#2244ff';
 ctx.beginPath();ctx.arc(cx-w*0.18+g.dx*2,py+h*0.36+g.dy*2,w*0.08,0,Math.PI*2);ctx.fill();
 ctx.beginPath();ctx.arc(cx+w*0.18+g.dx*2,py+h*0.36+g.dy*2,w*0.08,0,Math.PI*2);ctx.fill();
 }else{
-// Frightened face: two dots for eyes, wavy mouth
+// Ängstliches Gesicht: zwei Punkte als Augen, wellenförmiger Mund
 ctx.fillStyle='rgba(180,200,255,0.9)';
 ctx.beginPath();ctx.arc(cx-w*0.18,py+h*0.33,w*0.07,0,Math.PI*2);ctx.fill();
 ctx.beginPath();ctx.arc(cx+w*0.18,py+h*0.33,w*0.07,0,Math.PI*2);ctx.fill();
@@ -368,8 +368,8 @@ ctx.lineTo(mx+w*0.48,my);
 ctx.stroke();
 }
 }
-
-// ── DRAW PAC ─────────────────────────────────────
+  
+// PAC ZEICHNEN
 function drawPac(deathFrac){
 const cx=pac.tx*TS+TS/2,cy=pac.ty*TS+TS/2,r=TS/2-1;
 ctx.shadowColor='#ffdd00';ctx.shadowBlur=6;ctx.fillStyle='#ffdd00';
@@ -385,7 +385,7 @@ ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,facing+m,facing+Math.PI*2-m,fa
 ctx.shadowBlur=0;
 }
 
-// ── HUD ──────────────────────────────────────────
+// HUD
 function drawHUD(){
 const hy=ROWS*TS;
 ctx.fillStyle='#000';ctx.fillRect(0,hy,C.width,20);
@@ -424,7 +424,7 @@ pac.tx=PAC_START_TX;pac.ty=PAC_START_TY;pac.dx=0;pac.dy=0;pac.wx=0;pac.wy=0;pac.
 ghosts=makeGhosts();frightTimer=0;eatCombo=0;
 }
 
-// ── MAIN LOOP ────────────────────────────────────
+// HAUPTSCHLEIFE
 let rafId=null,lastT=0,acc=0;
 const FT=1000/60;
 function loop(now){
@@ -469,7 +469,7 @@ if(phase==='levelwin'&&phaseTimer>30)drawOverlay('LEVEL '+(level+1)+' CLEAR!','S
 if(phase==='gameover')drawOverlay(t('snake.game.over'),'Score: '+score+' — Neustart drücken','#ff3333');
 }
 
-// ── INPUT ────────────────────────────────────────
+// EINGABE
 function onKey(e){
 if(e.key==='p'||e.key==='P'){togglePause();return;}
 const useWASD=opts.ctrl==='WASD';
@@ -485,9 +485,7 @@ rafId=requestAnimationFrame(loop);
 currentGame.raf=rafId;
 }
 
-// ════════════════════════════════════════════════
-// ACCOUNT
-// ════════════════════════════════════════════════
+// KONTO
 var currentUser=null;
 function getDB(){try{return JSON.parse(localStorage.getItem('ghdb')||'{}')}catch(e){return{}}}
 function setDB(db){try{localStorage.setItem('ghdb',JSON.stringify(db))}catch(e){}}
@@ -529,7 +527,7 @@ const av=document.getElementById('sb-av'),nm=document.getElementById('sb-name'),
 const tav=document.getElementById('top-av'),tpts=document.getElementById('top-pts');
 const mpts=document.getElementById('my-lb-pts'),spts=document.getElementById('stat-pts');
 if(currentUser){
-// Load avatar from localStorage every time
+// Avatar bei jedem Mal aus localStorage laden
 try{const _u=JSON.parse(localStorage.getItem('ghUser')||'{}');if(_u.avatar)currentUser.avatar=_u.avatar;}catch(e){}
 const ghTotal=parseInt(localStorage.getItem('gh_total')||'0');
 const displayTotal=ghTotal>0?ghTotal:(currentUser.total||0);
@@ -544,10 +542,10 @@ if(tav){tav.textContent=avaDisp;tav.style.fontSize=avaSize;}
 if(tpts)tpts.textContent=displayTotal.toLocaleString()+t('points.suffix');
 if(mpts)mpts.textContent=displayTotal.toLocaleString();
 if(spts)spts.textContent=displayTotal.toLocaleString();
-// Update stats profile avatar if visible
+// Profil-Avatar in Statistik aktualisieren, falls sichtbar
 const profAv=document.getElementById('profile-av-display');
 if(profAv){profAv.textContent=ava||ini;profAv.style.fontSize=ava?'28px':'18px';}
-// Update leaderboard own row
+// Eigene Zeile in der Bestenliste aktualisieren
 const myLbAv=document.getElementById('my-lb-av');
 if(myLbAv){myLbAv.textContent=avaDisp;myLbAv.style.fontSize=avaSize;}
 }else{
