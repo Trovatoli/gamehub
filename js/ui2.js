@@ -1,29 +1,29 @@
 function applyTranslations(){
-// Update hardcoded elements
+// Hardcodierte Elemente aktualisieren
 const _gbb=document.getElementById('game-back-btn');if(_gbb)_gbb.textContent=t('nav.back');
 const _sbb=document.getElementById('settings-back-btn');if(_sbb)_sbb.textContent=t('nav.back');
 const _sbn=document.getElementById('sb-name');if(_sbn&&!currentUser)_sbn.textContent=t('auth.not.logged.in');
 const _sbp=document.getElementById('sb-pts');if(_sbp&&!currentUser)_sbp.textContent='';
-// data-i18n text content
+// data-i18n Text Kontent
 document.querySelectorAll('[data-i18n]').forEach(el=>{
 const key=el.getAttribute('data-i18n');
 const val=t(key);
 if(val)el.textContent=val;
 });
-// data-i18n-ph placeholders
+// data-i18n-ph Platzhalter
 document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
 const key=el.getAttribute('data-i18n-ph');
 const val=t(key);
 if(val)el.placeholder=val;
 });
-// data-i18n-title attributes
+// data-i18n-title Attribute
 document.querySelectorAll('[data-i18n-title]').forEach(el=>{
 const key=el.getAttribute('data-i18n-title');
 const val=t(key);
 if(val)el.title=val;
 });
 
-// Nav items (by content matching)
+// Nav Items (nach inhaltlicher Übereinstimmung)
 const navMap=[
 ['⊞','nav.games'],['🎮','nav.lobby'],['💬','nav.chat'],
 ['📊','nav.stats'],['⚙','nav.settings'],['📄','nav.impressum']
@@ -34,17 +34,17 @@ if(!icon)return;
 const match=navMap.find(([ic])=>icon.textContent.trim()===ic);
 if(!match)return;
 const translated=t(match[1]);
-// Try text nodes first
+// Erst Text nodes probieren
 for(const node of el.childNodes){
 if(node.nodeType===3&&node.textContent.trim()){
 node.textContent=translated; return;
 }
 }
-// Try spans that aren't icon or badge
+// Probieren Sie Spans aus, die keine Symbole oder Badges sind
 const spans=[...el.querySelectorAll('span')];
 const textSpan=spans.find(sp=>!sp.classList.contains('nav-icon')&&!sp.classList.contains('nav-badge'));
 if(textSpan){textSpan.textContent=translated;return;}
-// Fallback: rebuild content keeping icon and badge
+// Fallback: Inhalt neu erstellen, dabei Symbol und Badge beibehalten
 const badge=el.querySelector('.nav-badge');
 el.innerHTML='';
 el.appendChild(icon);
@@ -52,7 +52,7 @@ el.appendChild(document.createTextNode(translated));
 if(badge)el.appendChild(badge);
 });
 
-// Nav group labels
+// Nav Gruppenbezeichnungen
 const groupMap={'Spielen':'navg.play','Play':'navg.play','Community':'navg.community','Einstellungen':'navg.settings','Settings':'navg.settings','EINSTELLUNGEN':'navg.settings'};
 document.querySelectorAll('.nav-group').forEach(el=>{
 const txt=(el.textContent||el.innerText||'').trim();
@@ -60,13 +60,13 @@ const key=Object.keys(groupMap).find(k=>txt.toLowerCase().includes(k.toLowerCase
 if(key)el.textContent=t(groupMap[key]);
 });
 
-// Page title (stitle)
+// Seitentitel (stitle)
 const stitle=document.querySelector('#page-home .stitle');
 if(stitle)stitle.textContent=t('home.title');
 const ssettings=document.querySelector('#page-settings .stitle');
 if(ssettings)ssettings.textContent=t('set.pagetitle');
 
-// Game card subtitles
+// Untertitel für Spielkarten
 const cardSubMap={
 'snake':'card.snake.sub','pong':'card.pong.sub','vier':'card.vier.sub',
 'battle':'card.battle.sub','kniffel':'card.kniffel.sub','pacman':'card.pacman.sub'
@@ -77,7 +77,7 @@ const m=onclick.match(/launch\('(\w+)'\)/);
 if(!m)return;
 const sub=card.querySelector('.gcard-sub');
 if(sub)sub.textContent=t(cardSubMap[m[1]])||sub.textContent;
-// Translate game name
+// Spielnamen übersetzen
 const nameKey='game.'+m[1];
 const nameEl=card.querySelector('.gcard-name');
 if(nameEl&&t(nameKey)!==nameKey)nameEl.textContent=t(nameKey);
@@ -89,7 +89,7 @@ else if(cls.includes('badge-new'))badge.textContent=t('badge.new');
 }
 });
 
-// Settings page labels
+// Bezeichnungen Einstellungsseite
 const setLabelMap={
 'Spielsounds':'set.sounds','Game Sounds':'set.sounds',
 'Musik':'set.music','Music':'set.music',
@@ -109,11 +109,11 @@ else if(txt==='Audio')el.textContent=t('set.audio');
 else if(txt==='Spiel'||txt==='Game')el.textContent=t('set.game');
 });
 
-// Pause button
+// Pause Knopf
 const pb=document.getElementById('pause-btn');
 if(pb)pb.textContent=paused?t('game.resume'):t('game.pause');
 
-// Page title in topbar
+// Seitentitel in Kopfzeile
 const pt=document.getElementById('page-title');
 if(pt)pt.textContent=getPageTitle(pt.textContent)||pt.textContent;
 }
@@ -127,7 +127,7 @@ applyTranslations();
 if(document.getElementById('page-lobby-select')?.classList.contains('active'))renderLobbySelect();
 }
 
-// ── IN-GAME SETTINGS ─────────────────────────────
+// IN-GAME Einstellungen
 let _igSettingsOpen = false;
 let _igWasPaused = false;
 
@@ -139,11 +139,11 @@ else nav('settings');
 function openInGameSettings(){
 if(_igSettingsOpen) return;
 _igSettingsOpen = true;
-// Pause game
+// Spiel pausieren
 _igWasPaused = paused;
 if(!paused){ paused=true; }
 
-// Build modal
+// Modal erstellen
 const modal = document.createElement('div');
 modal.id = 'ig-settings-modal';
 modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82)';
@@ -188,7 +188,7 @@ modal.innerHTML = `
 
 document.body.appendChild(modal);
 
-// Highlight current theme
+// Aktuelles Theme hervorheben
 const curTheme = document.body.className.replace('theme-','');
 modal.querySelectorAll('.ig-theme-btn').forEach(btn=>{
 if(btn.dataset.theme===curTheme) btn.style.borderColor='#00f5ff';
@@ -199,7 +199,7 @@ btn.style.borderColor='#00f5ff';
 });
 });
 
-// Highlight current lang
+// Aktuelle Sprache hervorheben
 modal.querySelectorAll('.ig-lang-btn').forEach(btn=>{
 btn.style.borderColor=btn.dataset.lang===currentLang?'#00f5ff':'#1e1e38';
 btn.addEventListener('click',()=>{
@@ -212,7 +212,7 @@ btn.style.borderColor='#00f5ff';
 });
 });
 
-// Sound toggle
+// Ton ein-/ausschalten
 const tog = modal.querySelector('#ig-sound-toggle');
 function updateTog(){ tog.style.background=settings.sound?'#00f5ff':'#1e1e38'; tog.style.setProperty('--x',settings.sound?'18px':'2px'); }
 updateTog();
@@ -220,7 +220,7 @@ tog.innerHTML='<div style="position:absolute;top:3px;left:var(--x,2px);width:16p
 updateTog();
 tog.addEventListener('click',()=>{ settings.sound=!settings.sound; try{localStorage.setItem('ghsettings',JSON.stringify(settings));}catch(e){} updateTog(); });
 
-// Buttons
+// Knöpfe
 modal.querySelector('#ig-close-btn').addEventListener('click', closeInGameSettings);
 modal.querySelector('#ig-resume-btn').addEventListener('click', closeInGameSettings);
 modal.querySelector('#ig-menu-btn').addEventListener('click', ()=>{ closeInGameSettings(); stopAndHome(); });
@@ -230,7 +230,7 @@ function closeInGameSettings(){
 const modal = document.getElementById('ig-settings-modal');
 if(modal) modal.remove();
 _igSettingsOpen = false;
-// Resume if we paused it
+// Weiterspielen, falls wir unterbrochen haben
 if(!_igWasPaused){ paused=false; }
 document.getElementById('pause-btn').textContent=paused?t('game.resume'):t('game.pause');
 }
@@ -271,9 +271,9 @@ const PLAYER_COLORS=['#00f5ff','#ff44ff','#ffcc00','#00e676','#ff6b35','#a78bfa'
 const PLAYER_BG=['rgba(0,245,255,.15)','rgba(255,68,255,.15)','rgba(255,204,0,.15)','rgba(0,230,118,.15)','rgba(255,107,53,.15)','rgba(167,139,250,.15)'];
 var lsGameType='',lsPlayers=[],lsDiff='medium',lsMode='local',lsCtrl='Pfeiltasten';
 
-// ── ONLINE REMATCH HELPER ─────────────────────────
+// Online Revanche
 function showOnlineRematch(opts,won){
-// Remove existing overlay
+// Vorhandenes Overlay entfernen
 const existing=document.getElementById('rematch-overlay');
 if(existing)existing.remove();
 
@@ -330,12 +330,12 @@ lsGameType=type;
 const meta=GAME_META[type];
 if(!meta){launch_legacy(type);return;}
 
-// Default players
+// Standardspieler
 lsPlayers=[];
 const savedName=currentUser?currentUser.name:t('player.1');
 const defaultCtrl=metaL(meta.ctrl)[0]||'';
 lsPlayers.push({name:savedName,type:'human',color:0,ctrl:defaultCtrl});
-// Add p2 slot for all 2-player games
+// P2-Slot für alle 2-Spieler-Spiele hinzufügen
 if(meta.maxPlayers>=2){
 lsPlayers.push({name:'Computer',type:'ai',color:5,ctrl:''});
 }
@@ -353,18 +353,18 @@ if(!card)return;
 
 const humanCount=lsPlayers.filter(p=>p.type==='human').length;
 const aiCount=lsPlayers.filter(p=>p.type==='ai').length;
-const canAddHuman=humanCount<meta.maxLocal;  // only show if more humans allowed
+const canAddHuman=humanCount<meta.maxLocal;  // Nur anzeigen, wenn mehr Personen zugelassen sind
 const canAddAI=meta.hasAI&&aiCount===0&&lsMode==='local';
 const canStart=lsPlayers.length>=1;
 
 const ctrlOpts=metaL(meta.ctrl)||[];
-// Collect all ctrl choices made by other human players (for conflict detection)
+// alle von anderen menschlichen Spielern getroffenen "Ctrl"-Entscheidungen erfassen (zur Konflikterkennung)
 const usedCtrls=lsPlayers.filter(p=>p.type==='human').map(p=>p.ctrl).filter(Boolean);
 
 const playersHTML=lsPlayers.map((p,i)=>{
 const playerCtrl=p.ctrl||(ctrlOpts[0]||'');
-// Block a ctrl only if another human player already uses it
-// AND that player has no alternative (i.e. only one ctrl option available)
+// Eine Steuerungstaste nur dann sperren, wenn ein anderer menschlicher Spieler sie bereits verwendet
+// UND dieser Spieler hat keine Alternative (d. h., es steht nur eine Steuerungsoption zur Verfügung)
 const otherHumans=lsPlayers.filter((op,oi)=>oi!==i&&op.type==='human'&&op.ctrl);
 const otherCtrls=otherHumans.map(op=>op.ctrl);
 
@@ -381,7 +381,7 @@ ${c}${blocked?' 🚫':''}
 }).join('')}
 </div>`:'';
 
-// P2 type switcher (only for slot 1+)
+// P2-Umschalter (nur für Slot 1+)
 const typeSwitcher=i>0?`
 <div style="display:flex;gap:5px;margin-left:auto">
 <button class="ls-diff-btn${p.type==='human'?' active':''}" style="padding:3px 10px;font-size:11px" data-type-btn data-pidx="${i}" data-type="human">👤 ${t('lobby.human')}</button>
@@ -468,7 +468,7 @@ style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radiu
 <span class="ls-back" onclick="nav('home',document.querySelectorAll('.nav-item')[0])">${t('lobby.back')}</span>
 `;
 
-// Wire up buttons via addEventListener (reliable)
+// Schaltflächen über addEventListener einbinden (zuverlässig)
 const lsCard=document.getElementById('ls-card');
 if(lsMode==='online'){
 const joinBtn=lsCard?.querySelector('#ls-join-btn');
@@ -486,7 +486,7 @@ if(e.key==='Enter'){const code=codeInput.value.trim().toUpperCase();if(code.leng
 } else {
 const startBtn=lsCard?.querySelector('#ls-create-btn')||lsCard?.querySelector('.ls-start-btn');
 if(startBtn)startBtn.addEventListener('click',lsStartGame);
-// Wire add player buttons
+// Schaltflächen zum Hinzufügen von Spielern einbinden
 lsCard?.querySelectorAll('[data-add]').forEach(btn=>{
 btn.addEventListener('click',()=>{
 const type=btn.dataset.add;
@@ -500,41 +500,41 @@ else lsPlayers.push({name:'Computer',type:'ai',color:5});
 renderLobbySelect();
 });
 });
-// Wire per-player ctrl buttons
+// Ctrl-Tasten pro Spieler
 lsCard?.querySelectorAll('[data-ctrl-btn]').forEach(btn=>{
 btn.addEventListener('click',()=>{
 if(btn.disabled)return;
 const pidx=parseInt(btn.dataset.pidx);
 const newCtrl=btn.dataset.ctrl;
 const oldCtrl=lsPlayers[pidx]?.ctrl;
-// If another player has this ctrl, swap with them
+// Wenn ein anderer Spieler diese Steuerung hat, tausche die Rollen
 const conflict=lsPlayers.findIndex((p,i)=>i!==pidx&&p.type==='human'&&p.ctrl===newCtrl);
 if(conflict>=0){
-lsPlayers[conflict].ctrl=oldCtrl; // give them our old ctrl
+lsPlayers[conflict].ctrl=oldCtrl;
 }
 if(lsPlayers[pidx])lsPlayers[pidx].ctrl=newCtrl;
 if(pidx===0)lsCtrl=newCtrl;
 renderLobbySelect();
 });
 });
-// Wire type switcher buttons (Human/KI)
+// Modus-Umschalter (Mensch/KI)
 lsCard?.querySelectorAll('[data-type-btn]').forEach(btn=>{
 btn.addEventListener('click',()=>{
 const pidx=parseInt(btn.dataset.pidx);
 const newType=btn.dataset.type;
 if(!lsPlayers[pidx])return;
 const oldType=lsPlayers[pidx].type;
-if(oldType===newType)return; // no change needed
+if(oldType===newType)return;
 lsPlayers[pidx].type=newType;
 if(newType==='ai'){
 lsPlayers[pidx].name='Computer';
 lsPlayers[pidx].ctrl='';
 } else {
-// Keep name if already set, otherwise set default
+// Namen beibehalten, falls bereits festgelegt; sonst Standardwert festlegen
 if(!lsPlayers[pidx].name||lsPlayers[pidx].name==='Computer'){
 lsPlayers[pidx].name='Spieler '+(pidx+1);
 }
-// Give default ctrl (different from p1)
+// Standard-Strg-Taste festlegen (abweichend von p1)
 const meta=GAME_META[lsGameType];
 const ctrlOpts=metaL(meta.ctrl)||[];
 const p1ctrl=lsPlayers[0]?.ctrl||ctrlOpts[0];
@@ -543,11 +543,11 @@ lsPlayers[pidx].ctrl=ctrlOpts.find(c=>c!==p1ctrl)||ctrlOpts[1]||ctrlOpts[0]||'';
 renderLobbySelect();
 });
 });
-// Wire old [data-ctrl] buttons (fallback for global ctrl)
+// Alte [data-ctrl]-Schaltflächen einbinden (Fallback für globale Strg-Taste)
 lsCard?.querySelectorAll('[data-ctrl]:not([data-ctrl-btn])').forEach(btn=>{
 btn.addEventListener('click',()=>{lsCtrl=btn.dataset.ctrl;renderLobbySelect();});
 });
-// Wire diff buttons
+// Diff Tasten
 lsCard?.querySelectorAll('.ls-diff-btn:not([data-ctrl-btn])').forEach(btn=>{
 btn.addEventListener('click',()=>{
 const btnText=btn.textContent;
@@ -557,14 +557,14 @@ else lsDiff='medium';
 renderLobbySelect();
 });
 });
-// Wire player name inputs
+// Eingaben für die Namen der Spieler
 lsCard?.querySelectorAll('.ls-player-input[data-pidx]').forEach(inp=>{
 inp.addEventListener('input',()=>{
 const i=parseInt(inp.dataset.pidx);
 if(lsPlayers[i])lsPlayers[i].name=inp.value;
 });
 });
-// Wire remove buttons
+// Schaltflächen zum Entfernen
 lsCard?.querySelectorAll('[data-remove]').forEach(btn=>{
 btn.addEventListener('click',()=>{
 const i=parseInt(btn.dataset.remove);
@@ -604,7 +604,7 @@ createOnlineRoom(lsGameType);
 return;
 }
 
-// Assign ctrl to each player if not set
+// Weise jedem Spieler ctrl zu, falls noch nicht festgelegt
 lsPlayers.forEach((p,i)=>{
 if(!p.ctrl) p.ctrl=lsCtrl||(i===0?lsCtrl:'');
 });
@@ -613,7 +613,7 @@ diff:lsDiff,
 ctrl:lsPlayers[0]?.ctrl||lsCtrl,
 p2ctrl:lsPlayers[1]?.ctrl||lsCtrl,
 mode:hasAI?'Gegen KI':(humanPlayers.length>1?'Lokal 2P':'Solo'),
-players:JSON.parse(JSON.stringify(lsPlayers)), // deep copy
+players:JSON.parse(JSON.stringify(lsPlayers)),
 playerNames:humanPlayers.map(p=>p.name),
 };
 
@@ -622,18 +622,16 @@ lastGameOpts=opts;
 startGame(lsGameType,opts);
 }
 
-// Legacy launch for games without meta
+// Legacy-Start für Spiele ohne Meta
 function launch_legacy(type){
 lastGameType=type;
 lastGameOpts={ctrl:'Pfeiltasten',diff:'medium',mode:'Solo'};
 startGame(type,lastGameOpts);
 }
 
-// ════════════════════════════════════════════════
 // SNAKE
-// ════════════════════════════════════════════════
 
-// ── Shared Online Rematch System ─────────────────
+// System für gemeinsame Online-Revanche
 function createRematchSystem(onlineRoomId, isHost, onRestart){
 let rematchOverlay=null;
 let rematchPollTimer=null;
@@ -666,7 +664,7 @@ if(status)status.textContent=t('game.waiting');
 
 const myRole=isHost?'host':'guest';
 
-// Use server-side rematch endpoint - atomic vote counting
+// Serverseitigen Revanche-Endpunkt verwenden
 if(rematchPollTimer)clearInterval(rematchPollTimer);
 
 let votedReady=false;
@@ -681,7 +679,7 @@ setTimeout(()=>onRestart(),200);
 }
 }
 
-// Vote immediately and keep voting every 600ms until both ready
+// Stimme sofort ab und stimme alle 600 ms erneut ab, bis beide bereit sind
 vote();
 rematchPollTimer=setInterval(vote,600);
 }
