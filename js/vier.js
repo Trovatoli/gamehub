@@ -7,13 +7,13 @@ C.width=CW; C.height=CH;
 const ctx=C.getContext('2d');
 
 const COLS=7,ROWS=6;
-// Calculate radius so grid fills ~85% of canvas
+// Radius berechnen, sodass das Raster etwa 85 % der Fläche ausfüllt
 const R=Math.floor(Math.min((CW*0.88)/(COLS*2+COLS-1),(CH*0.78)/(ROWS*2+ROWS-1))/1);
 const GAP=Math.floor(R*0.28);
 const gridW=COLS*(R*2+GAP)-GAP;
 const gridH=ROWS*(R*2+GAP)-GAP;
-const OX=Math.floor((CW-gridW)/2); // center horizontally
-const OY=Math.floor((CH-gridH)/2)+10; // center vertically
+const OX=Math.floor((CW-gridW)/2); // horizontal zentrieren
+const OY=Math.floor((CH-gridH)/2)+10; // vertikal zentrieren
 
 const depth={easy:2,medium:5,hard:8}[opts.diff||'medium']||5;
 document.getElementById('g-status').textContent=t('vier.status.local');
@@ -53,19 +53,19 @@ const oppC=window.filter(x=>x===opp).length;
 if(mine===4)return 10000;
 if(mine===3&&empty===1)return 200;
 if(mine===2&&empty===2)return 20;
-if(oppC===3&&empty===1)return -180; // block opponent 3
+if(oppC===3&&empty===1)return -180; // Gegner 3 blockieren
 if(oppC===2&&empty===2)return -10;
 return 0;
 }
 
 function score(b,p){
 let sc=0;
-// Centre column preference (strong positional advantage)
+// Präferenz für mittlere Reihe (deutlicher Positionsvorteil)
 const centre=[3,2,4,1,5,0,6];
 const centreWeights=[10,6,6,3,3,1,1];
 for(let r=0;r<ROWS;r++)
 centre.forEach((c,i)=>{if(b[r][c]===p)sc+=centreWeights[i];});
-// Bottom row bonus (control base)
+// Bonus für die unterste Reihe (Kontrollbasis)
 for(let c=0;c<COLS;c++)if(b[ROWS-1][c]===p)sc+=4;
 
 const dirs=[[0,1],[1,0],[1,1],[1,-1]];
@@ -106,12 +106,12 @@ function bestMove(){
 const cols=[];for(let c=0;c<COLS;c++)if(board[0][c]===0)cols.push(c);
 if(!cols.length)return 3;
 cols.sort((a,b)=>Math.abs(a-3)-Math.abs(b-3));
-// 1. Immediate win
+// 1. Direkter Sieg
 for(const c of cols){
 const nb=board.map(r=>[...r]);drop(nb,c,2);
 if(checkWin(nb))return c;
 }
-// 2. Block opponent immediate win
+// 2. direkten Sieg des Gegners verhindern
 for(const c of cols){
 const nb=board.map(r=>[...r]);drop(nb,c,1);
 if(checkWin(nb))return c;
@@ -127,36 +127,36 @@ return col;
 }
 
 function draw(winLine){
-// Background
+// Hintergrund
 ctx.fillStyle='#06060f';ctx.fillRect(0,0,CW,CH);
 
-// Board background panel
+// Board Hintergrund Panel
 const pad=R+GAP;
 ctx.fillStyle='#0c1428';
 ctx.beginPath();ctx.roundRect(OX-pad,OY-pad,gridW+pad*2,gridH+pad*2,14);ctx.fill();
 ctx.strokeStyle='rgba(0,245,255,.12)';ctx.lineWidth=1.5;ctx.stroke();
 
-// Column numbers
+// Spaltennummern
 ctx.fillStyle='rgba(255,255,255,.22)';ctx.font=`bold ${Math.max(11,R*.55)}px monospace`;ctx.textAlign='center';
 for(let c=0;c<COLS;c++)ctx.fillText(c+1,cx(c),OY-pad+R*.7);
 
-// Cells
+// Zellen
 for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
 const x=cx(c),y=cy(r),v=board[r][c];
-// Hole shadow
+// Lochschatten
 ctx.fillStyle='rgba(0,0,0,.5)';ctx.beginPath();ctx.arc(x,y+2,R,0,Math.PI*2);ctx.fill();
-// Hole
+// Loch
 ctx.fillStyle='#050910';ctx.beginPath();ctx.arc(x,y,R,0,Math.PI*2);ctx.fill();
 
-// Hover preview — only landing row
-// Hover: only when human is playing (not during AI turn)
+// Vorschau bei Mauszeiger-Hover – nur die oberste Zeile
+// Hover: nur wenn ein Mensch spielt (nicht während des KI-Zugs)
 const isHumanTurn=turn===1||(opts.players?.[1]?.type==='human'&&turn===2);
 if(!over&&isHumanTurn&&c===hovCol&&r===landRow(c)){
 ctx.globalAlpha=.28;ctx.fillStyle=turn===1?'#00f5ff':'#ffcc00';
 ctx.beginPath();ctx.arc(x,y,R-2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
 }
 
-// Piece
+// Stück
 if(v===1){
 const g=ctx.createLinearGradient(x-R,y-R,x+R,y+R);
 g.addColorStop(0,'#33ffff');g.addColorStop(1,'#0099cc');
@@ -171,7 +171,7 @@ ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,R-2,0,Math.PI*2);ctx.fill();
 ctx.shadowBlur=0;
 }
 
-// Win ring
+// Sieges Ring
 if(winLine&&winLine.some(([wr,wc])=>wr===r&&wc===c)){
 ctx.strokeStyle='#fff';ctx.lineWidth=3;
 ctx.shadowColor='#fff';ctx.shadowBlur=12;
@@ -180,7 +180,7 @@ ctx.shadowBlur=0;
 }
 }
 
-// Turn indicator
+// Zug Indikator
 if(!over){
 ctx.font=`${Math.max(11,R*.5)}px sans-serif`;ctx.textAlign='center';
 const isLocal2P=!opts.isOnline&&opts.players?.[1]?.type==='human';
@@ -194,12 +194,12 @@ ctx.textAlign='left';
 }
 
 function showEndScreen(won){
-// Dark overlay
+// Dunkles Overlay
 ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(0,0,CW,CH);
-// Big emoji
+// Große Emoji
 ctx.font=`${Math.round(CH*.12)}px serif`;ctx.textAlign='center';
 ctx.fillText(won?'🎉':'😢',CW/2,CH*.28);
-// Result text
+// Ergebnistext
 ctx.fillStyle=won?'#00f5ff':'#ff4444';
 ctx.font=`bold ${Math.round(CH*.075)}px sans-serif`;
 const isLocal2P=!opts.isOnline&&opts.players?.[1]?.type==='human';
@@ -207,11 +207,11 @@ const p1name=opts.players?.[0]?.name||'Spieler 1';
 const p2name=opts.isOnline?(opts.opponentName||'Gegner'):(isLocal2P?(opts.players?.[1]?.name||'Spieler 2'):'KI');
 const winText=isLocal2P?(won?p1name+t('vier.p.win'):p2name+t('vier.p.win')):(opts.isOnline?(won?t('vier.you.win'):t('vier.opp.win2')):(won?'DU GEWINNST!':'KI GEWINNT!'));
 ctx.fillText(winText,CW/2,CH*.46);
-// Score
+// Punkte
 ctx.fillStyle='rgba(255,255,255,.7)';
 ctx.font=`${Math.round(CH*.038)}px sans-serif`;
 ctx.fillText(`${wins1} Siege · ${wins2} ${p2name}-Siege`,CW/2,CH*.57);
-// Instruction
+// Anleitung
 ctx.fillStyle='rgba(255,255,255,.35)';
 ctx.font=`${Math.round(CH*.032)}px sans-serif`;
 const hint=opts.isOnline?'Klicke "↺ Neu" für Rematch-Anfrage':'↺  Neustart drücken';
@@ -222,7 +222,7 @@ else showLocalRematch(won?(opts.players?.[0]?.name||'Spieler 1'):(opts.players?.
 }
 
 function doAI(){
-if(opts.isOnline)return; // No AI in online mode
+if(opts.isOnline)return; // Keine KI im Online-Modus
 if(over||!currentGame)return;
 const col=bestMove();
 drop(board,col,2);sndPlace();
@@ -236,8 +236,8 @@ document.getElementById('g-status').textContent=t('vier.lose');sndFail();
 
 function onClick(e){
 if(over)return;
-// Online: host=player1(turn1), guest=player2(turn2)
-// Local 2P: both players use same screen, allow current turn to click
+// Online: Gastgeber=Spieler1 (Zug 1), Gast=Spieler2 (Zug 2)
+// Lokal 2P: Beide Spieler nutzen denselben Bildschirm; der Spieler, der gerade am Zug ist, darf klicken
 const isLocal2P=!opts.isOnline&&opts.players?.[1]?.type==='human';
 const myTurn=opts.isOnline?(opts.isHost?1:2):(isLocal2P?turn:1);
 if(turn!==myTurn)return;
@@ -258,21 +258,21 @@ if(p1won)fbSaveScore('vier',200);
 const winnerName=p1won?(opts.players?.[0]?.name||'Spieler 1'):(opts.players?.[1]?.name||'Spieler 2');
 const _vierWinner=isLocal2P?winnerName:(p1won?(opts.players?.[0]?.name||'P1'):(opts.players?.[1]?.name||opts.aiName||'KI')); document.getElementById('g-status').textContent=_vierWinner+' '+t('game.win')+' 🎉 '+t('vier.restart.hint');
 sndWin();
-// Tell opponent they lost
+// Gegner mitteilen, dass er verloren hat
 if(opts.isOnline&&opts.onlineRoomId){
 apiCall('rooms/'+opts.onlineRoomId+'/sync','POST',{col,uid:fbUser?.uid,turn:myTurn,ts:Date.now(),won:fbUser?.uid});
 }
 return;
 }
-// Switch to opponent's turn
+// Zum Zug des Gegners wechseln
 turn=opts.isOnline?(opts.isHost?2:1):(turn===1?2:1);
 draw();
-// In online mode: write move to Firebase
+// Im Online-Modus: Schreibvorgang an Firebase senden
 if(opts.isOnline&&opts.onlineRoomId){
 apiCall('rooms/'+opts.onlineRoomId+'/sync','POST',{col,uid:fbUser?.uid,turn:myTurn,ts:Date.now()});
 } else if(opts.players?.[1]?.type!=='human'){
 setTimeout(doAI,380);
-} // local 2P: turn already switched above, draw() already called
+} // local 2P: Turn oben bereits geschaltet, draw()  bereits aufgerufen
 }
 
 function onMove(e){
@@ -285,7 +285,7 @@ if(col!==hovCol){hovCol=col;if(!over&&isHumanTurn)draw();}
 }
 
 function onKey(e){if(e.key==='p'||e.key==='P')togglePause();}
-// Use pointerdown to avoid ghost clicks from restart button
+// Verwende "pointerdown", um ungewollte Klicks auf die Neustart-Schaltfläche zu vermeiden
 let _pointerDownOnCanvas=false;
 C.addEventListener('pointerdown',()=>{_pointerDownOnCanvas=true;});
 C.addEventListener('click',(e)=>{
@@ -293,28 +293,28 @@ if(!_pointerDownOnCanvas)return;
 _pointerDownOnCanvas=false;
 onClick(e);
 });
-// Reset on any outside click
+// Reset bei outside Klick
 document.addEventListener('pointerdown',(e)=>{
 if(e.target!==C)_pointerDownOnCanvas=false;
 },{capture:true});
 C.addEventListener('mousemove',onMove);
 C.addEventListener('mouseleave',()=>{hovCol=-1;if(!over)draw();});
 document.addEventListener('keydown',onKey);
-// ── Online sync for 4 Gewinnt ──
+// Online Sync für 4 Gewinnt
 if(opts.isOnline&&opts.onlineRoomId){
-let lastMoveTs=Date.now()-5000; // ignore moves older than 5s on init
+let lastMoveTs=Date.now()-5000; // Bewegungen, die älter als 5 Sekunden sind, bei Initialisierung ignorieren
 _safeInterval(async()=>{
 if(paused||over)return;
 const sync=await apiCall('rooms/'+opts.onlineRoomId+'/sync','GET');
 if(!sync||sync.error)return;
-// Handle both cases: server returns {sync:{...}} or just {...}
+// Beide Fälle berücksichtigen: Der Server gibt entweder {sync:{...}} oder nur {...} zurück
 const moveSync=sync.sync||sync;
 if(!moveSync||moveSync.col===undefined||!moveSync.ts)return;
 if(moveSync.ts<=lastMoveTs)return;
 if(moveSync.uid===fbUser?.uid)return;
 lastMoveTs=moveSync.ts;
 
-// Apply opponent's move
+// Zug des Gegners ausführen
 const col=moveSync.col;
 const oppColor=opts.isHost?2:1;
 const row=landRow(col);
@@ -330,14 +330,13 @@ showEndScreen(false);
 document.getElementById('g-status').textContent=t('vier.opp.win');
 sndFail();
 } else {
-turn=opts.isHost?1:2; // back to my turn
+turn=opts.isHost?1:2; // Zurück zu meinem Zug
 draw();
 }
 },300);
 }
 
-// ── Rematch system ───────────────────────────
-// ── Rematch (shared helper) ─────────────────
+// Revanchesystem 
 const rematchSys=opts.isOnline&&opts.onlineRoomId
 ?createRematchSystem(opts.onlineRoomId,opts.isHost,()=>startGame(lastGameType,lastGameOpts))
 :null;
@@ -350,7 +349,3 @@ document.removeEventListener('keydown',onKey);
 };
 draw();
 }
-
-// ════════════════════════════════════════════════
-// SCHIFFE VERSENKEN
-// ════════════════════════════════════════════════
