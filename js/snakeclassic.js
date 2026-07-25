@@ -1,25 +1,25 @@
 function initSnakeClassic(opts){
-// Solo mode: hide KI score chip
+// Solo-Modus: KI-Punkteanzeige ausblenden
 const _chip=document.getElementById('s2-chip');
 if(_chip)_chip.style.display='none';
 const C=document.getElementById('gc');
 const area=document.getElementById('canvas-area');
 const AW=area?area.clientWidth:500;
 const AH=area?area.clientHeight:500;
-const S=22; // cell size - bigger
+const S=22; // Zellgröße – größer
 const COLS=Math.floor((AW-4)/S);
-const ROWS=Math.floor((AH-40)/S); // 40px for score bar at top
-const OX=Math.floor((AW-COLS*S)/2); // center horizontally
-const OY=40; // start below score bar
+const ROWS=Math.floor((AH-40)/S); // 40px für die Punkteleiste oben
+const OX=Math.floor((AW-COLS*S)/2); // horizontal zentrieren
+const OY=40; // Beginn unterhalb der Punkteleiste
 C.width=AW; C.height=ROWS*S+OY;
 
 const ctx=C.getContext('2d');
 
-// Nokia-style palette
-const COL_BG='#1a2a12';        // dark green background
-const COL_BOARD='#4a7c3f';     // lighter green board
-const COL_SNAKE='#1a2a12';     // dark snake (contrasts with board)
-const COL_FOOD='#e8001c';      // red apple
+// Nokia-Stil Palette
+const COL_BG='#1a2a12';        // dunkelgrüner Hintergrund
+const COL_BOARD='#4a7c3f';     // hellgrünes Brett
+const COL_SNAKE='#1a2a12';     // dunkle Schlange (hebt sich vom Brett ab)
+const COL_FOOD='#e8001c';      // roter Apfel
 const COL_SCORE_BG='#2a3d1c';
 const COL_SCORE_TXT='#8fbc5a';
 const COL_BORDER='#2d4d1e';
@@ -55,7 +55,7 @@ ctx.fill();
 }
 
 function draw(){
-// Score bar
+// Punkteleiste
 ctx.fillStyle=COL_SCORE_BG;
 ctx.fillRect(0,0,C.width,OY);
 ctx.fillStyle=COL_SCORE_TXT;
@@ -65,11 +65,11 @@ ctx.fillText('SCORE '+String(score).padStart(4,'0'),8,26);
 ctx.textAlign='right';
 ctx.fillText('BEST  '+String(highScore).padStart(4,'0'),C.width-8,26);
 
-// Board background
+// Board Hintergrund
 ctx.fillStyle=COL_BOARD;
 ctx.fillRect(OX,OY,COLS*S,ROWS*S);
 
-// Grid dots (Nokia style)
+// Rasterpunkte (im Nokia-Stil)
 ctx.fillStyle='rgba(0,0,0,0.12)';
 for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
 ctx.beginPath();
@@ -77,31 +77,31 @@ ctx.arc(OX+c*S+S/2,OY+r*S+S/2,1,0,Math.PI*2);
 ctx.fill();
 }
 
-// Food - red apple with stem and highlight
+// Essen – roter Apfel mit Stiel und Glanzpunkt
 if(true){
 const fx=OX+food.x*S+S/2, fy=OY+food.y*S+S/2, fr=S/2-2;
-// Apple body
+// Apfel
 ctx.fillStyle=COL_FOOD;
 ctx.beginPath();ctx.arc(fx,fy+1,fr,0,Math.PI*2);ctx.fill();
-// Shine
+// Glanz
 ctx.fillStyle='rgba(255,255,255,0.35)';
 ctx.beginPath();ctx.ellipse(fx-fr*0.3,fy-fr*0.25,fr*0.3,fr*0.2,-0.5,0,Math.PI*2);ctx.fill();
-// Stem
+// Stiel
 ctx.strokeStyle='#3a2000';ctx.lineWidth=1.5;
 ctx.beginPath();ctx.moveTo(fx,fy-fr);ctx.quadraticCurveTo(fx+3,fy-fr-4,fx+4,fy-fr-6);ctx.stroke();
-// Leaf
+// Blatt
 ctx.fillStyle='#22a030';
 ctx.beginPath();ctx.ellipse(fx+5,fy-fr-4,4,2,0.8,0,Math.PI*2);ctx.fill();
 }
 
-// Snake - dark squares on green board
+// Snake - dunkle Felder auf grünen Brett
 snake.forEach((seg,i)=>{
 const isHead=i===0;
 ctx.fillStyle=COL_SNAKE;
 ctx.beginPath();
 ctx.roundRect(OX+seg.x*S+1,OY+seg.y*S+1,S-2,S-2,isHead?4:2);
 ctx.fill();
-// Eyes on head
+// Augen im Kopf
 if(isHead){
 ctx.fillStyle=COL_BOARD;
 const ex=dir.x,ey=dir.y;
@@ -117,7 +117,7 @@ ctx.beginPath();ctx.arc(cx2+eyeOff,cy2+ey*3,2,0,Math.PI*2);ctx.fill();
 }
 });
 
-// Start hint
+// Start-Hinweis
 if(!started){
 ctx.fillStyle='rgba(26,42,18,0.7)';
 ctx.fillRect(OX,OY+ROWS*S/2-20,COLS*S,40);
@@ -150,7 +150,7 @@ draw();
 function gameOver(){
 dead=true;
 sndFail();
-// Flash the snake
+// Flash die Schlange
 let f=0;
 const fl=setInterval(()=>{
 f++;
@@ -161,7 +161,7 @@ ctx.fillRect(OX+seg.x*S,OY+seg.y*S,S,S);
 if(f>=6){
 clearInterval(fl);
 draw();
-// Game over overlay
+// Game over Overlay
 ctx.fillStyle='rgba(26,42,18,0.82)';
 ctx.fillRect(OX+8,OY+ROWS*S/2-36,COLS*S-16,78);
 ctx.strokeStyle=COL_SCORE_TXT;ctx.lineWidth=2;
@@ -174,7 +174,7 @@ ctx.fillText('SCORE: '+String(score).padStart(4,'0'),OX+COLS*S/2,OY+ROWS*S/2+10)
 ctx.fillText('BEST:  '+String(highScore).padStart(4,'0'),OX+COLS*S/2,OY+ROWS*S/2+28);
 document.getElementById('g-status').textContent='GAME OVER — Score: '+score;
 fbSaveScore('snakeclassic',score);
-// Show global leaderboard
+// Globale Rangliste anzeigen
 setTimeout(()=>showSnakeClassicLeaderboard(score,C,ctx,OX,OY,COLS,ROWS,S,COL_BOARD,COL_SCORE_TXT),400);
 }
 },80);
@@ -193,7 +193,7 @@ if(!started)started=true;
 e.preventDefault();
 }
 
-// Touch swipe
+// Berühren und wischen
 let tx=0,ty=0;
 C.addEventListener('touchstart',ev=>{tx=ev.touches[0].clientX;ty=ev.touches[0].clientY;ev.preventDefault();},{passive:false});
 C.addEventListener('touchend',ev=>{
@@ -207,9 +207,9 @@ ev.preventDefault();
 document.addEventListener('keydown',onKey);
 draw();
 
-// Render loop (draw food blink)
+// Render-Schleife
 const renderLoop=setInterval(()=>{if(!dead&&!paused)draw();},400);
-// Game tick
+// Game Tick
 const gameLoop=setInterval(()=>{if(!dead)update();},speed);
 currentGame._gameLoop=gameLoop;
 currentGame._renderLoop=renderLoop;
@@ -220,26 +220,26 @@ clearInterval(gameLoop);clearInterval(renderLoop);
 };
 
 async function showSnakeClassicLeaderboard(myScore,C,ctx,OX,OY,COLS,ROWS,S,COL_BOARD,COL_SCORE_TXT){
-// Save score first then fetch leaderboard
+// Zuerst das Ergebnis speichern, dann die Rangliste abrufen
 let lb=[];
 try{
 const r=await fetch('/api/leaderboard/snakeclassic');
 const d=await r.json();
 lb=d?.leaderboard||[];
 }catch(ex){lb=[];}
-// Draw leaderboard on canvas
+// Rangliste auf Canvas zeichnen
 const W=COLS*S,H=ROWS*S;
 ctx.fillStyle='rgba(10,20,8,0.92)';
 ctx.fillRect(OX,OY,W,H);
 ctx.strokeStyle=COL_SCORE_TXT;ctx.lineWidth=2;
 ctx.strokeRect(OX+4,OY+4,W-8,H-8);
-// Title
+// Titel
 ctx.fillStyle=COL_SCORE_TXT;
 ctx.font='bold 15px monospace';ctx.textAlign='center';
 ctx.fillText('🏆 HIGHSCORES',OX+W/2,OY+24);
 ctx.fillStyle='rgba(143,188,90,0.4)';
 ctx.fillRect(OX+8,OY+30,W-16,1);
-// Entries
+// Einträge
 ctx.font='12px monospace';
 const medals=['🥇','🥈','🥉'];
 lb.slice(0,8).forEach((entry,i)=>{
@@ -253,10 +253,10 @@ ctx.fillText(medal+' '+(entry.avatar||'')+entry.name.slice(0,12),OX+14,y);
 ctx.textAlign='right';
 ctx.fillText(String(entry.score).padStart(5,'0'),OX+W-14,y);
 });
-// My score if not in top 8
+// Meine Punktzahl, falls ich nicht unter den Top 8 bin
 const myRank=lb.findIndex(e=>e.uid===fbUser?.uid);
 const myName=currentUser?.name||fbUser?.name||'Du';
-// Show my entry if not in top 8 OR if not in leaderboard at all
+// Meinen Eintrag anzeigen, wenn er nicht unter den Top 8 ist ODER wenn er gar nicht in der Rangliste erscheint
 const inTop8=myRank>=0&&myRank<8;
 if(!inTop8&&fbUser){
 const rankLabel=myRank>=0?(myRank+1)+'.':'—';
