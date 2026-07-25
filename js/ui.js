@@ -1,12 +1,12 @@
 function nav(page,el){
-// Toggle: only when in-game, clicking same page closes it and returns to game
+// Umschalten: Nur im Spiel; durch Klicken auf dieselbe Seite wird diese geschlossen und man kehrt zum Spiel zurück
 console.log('[TOGGLE] currentGame='+!!currentGame+' _navInGamePage='+window._navInGamePage+' page='+page);
 if(currentGame&&window._navInGamePage===page&&page!=='game'&&page!=='home'){
   window._navInGamePage=null;
-  // Remove overlay panel if it exists
+  // Overlay Feld entfernen, falls vorhanden
   const _ol=document.getElementById('nav-overlay');
   if(_ol){
-    // Restore page back to original parent before removing overlay
+    // Seite vor dem Entfernen des Overlays wieder auf die ursprüngliche übergeordnete Seite zurücksetzen
     const _pg=_ol.querySelector('.page');
     if(_pg&&_pg._origParent){
       _pg.classList.remove('active');
@@ -25,25 +25,25 @@ if(currentGame&&window._navInGamePage===page&&page!=='game'&&page!=='home'){
 }
 if(currentGame&&page!=='game'&&page!=='home') window._navInGamePage=page;
 else if(page==='game') window._navInGamePage=null;
-// If navigating away from game but game is still running, just pause (don't stop)
+// Wenn du das Spiel verlässt, es aber noch läuft, setze es einfach auf Pause (nicht beenden)
 const wasInGame=document.getElementById('page-game')?.classList.contains('active');
 if(page!=='game'&&page!=='premenu'){
 if(wasInGame&&currentGame&&page!=='home'){
-// Pause game without stopping it
+// Spiel pausieren, ohne es zu beenden
 paused=true;
 } else {
 stopAll();
 }
 }
-// If returning to game, unpause
+// Wenn man zurückkehrt, Spiel fortsetzen
 if(page==='game'&&currentGame)paused=false;
 document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
 if(page==='game'||(wasInGame&&currentGame&&page!=='home')){
-// Keep game page visible, show target as overlay if not game
+// Spielseite sichtbar lassen, Ziel als Overlay anzeigen, wenn kein Spiel läuft
 document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 document.getElementById('page-game')?.classList.add('active');
 if(page!=='game'){
-// Show non-game page as floating overlay
+// Seite außerhalb des Spiels als Overlay anzeigen
 let overlay=document.getElementById('nav-overlay');
 if(!overlay){
 overlay=document.createElement('div');
@@ -53,14 +53,14 @@ document.body.appendChild(overlay);
 }
 const targetPage=document.getElementById('page-'+page);
 if(targetPage){
-// Clear overlay but keep close button
+// Overlay ausblenden, aber Schließen-Knopf beibehalten
 overlay.innerHTML='';
 const closeBtn=document.createElement('div');
 closeBtn.innerHTML=t('lobby.close.back');
 closeBtn.style.cssText='padding:10px 16px;cursor:pointer;font-size:13px;color:var(--accent);border-bottom:1px solid var(--border);font-weight:700;flex-shrink:0;';
 closeBtn.onclick=()=>nav('game');
 overlay.appendChild(closeBtn);
-// Show target page over the game (no moving - avoids restore bugs)
+// Zielseite über dem Spiel anzeigen (keine Bewegung – vermeidet Fehler beim Wiederherstellen)
 targetPage.classList.add('active');
 targetPage.style.position='fixed';
 targetPage.style.inset='48px 0 0 var(--sidebar)';
@@ -68,7 +68,7 @@ targetPage.style.zIndex='500';
 targetPage.style.background='var(--bg)';
 overlay._activePage2=targetPage;
 overlay._activePage=page;
-// Init page content
+// Seiteninhalt initialisieren
 if(page==='account'){try{renderAccount();loadFriendRequests();}catch(e){}}
 if(page==='lobby'){try{loadLobbies();}catch(e){}}
 if(page==='stats'){try{updateStats();}catch(e){}}
@@ -76,7 +76,7 @@ if(page==='impressum'){try{renderImpressum&&renderImpressum();}catch(e){}}
 
 }
 } else {
-// Returning to game - move page back and close overlay
+// Zurück zum Spiel – Seite zurückblättern und Overlay schließen
 const ol=document.getElementById('nav-overlay');
 if(ol){
 const pg=ol._activePage2;
@@ -96,7 +96,7 @@ const ol=document.getElementById('nav-overlay');
 if(ol)ol.remove();
 }
 document.getElementById('page-title').textContent=getPageTitle(page);
-// Show/hide topbar back button
+// Zurück-Schaltfläche in der oberen Leiste ein-/ausblenden
 const _tbBtn=document.getElementById('topbar-game-back');
 if(_tbBtn)_tbBtn.style.display=(currentGame&&page!=='game')?'block':'none';
 if(el)el.classList.add('active');
@@ -116,13 +116,11 @@ applyTranslations();
 updateBackToGameBtn();
 }
 
-// ════════════════════════════════════════════════
-// GAME LAUNCHER
-// ════════════════════════════════════════════════
-// Games that need pre-menu (ctrl/difficulty choice)
+// SPIEL-LAUNCHER
+// Spiele, die ein Vormenü benötigen (Strg/Schwierigkeit)
 
 function launch(type){
-// Use new lobby select for all games
+// Für alle Spiele die neue Lobby-Auswahl verwenden
 openLobbySelect(type);
 }
 
@@ -136,7 +134,7 @@ document.getElementById('s1').textContent='0';
 document.getElementById('s2').textContent='0';
 const p2name=opts.isOnline?(opts.opponentName||'Gegner'):(opts.players?.[1]?.type==='human'?(opts.players?.[1]?.name||'Spieler 2'):(opts.players?.[1]?.type==='ai'?'KI':''));
 document.getElementById('s2lbl').textContent=p2name;
-// Hide P2 score chip for solo modes (snakeclassic, or no opponent)
+// P2-Punkteanzeige für Solo-Modi (Snakeclassic oder ohne Gegner) ausblenden
 const _s2chip=document.getElementById('s2-chip');
 if(_s2chip){
   const _solo = type==='snakeclassic' || (!opts.isOnline && (!opts.players || opts.players.length<=1) && !opts.vsAI);
@@ -146,19 +144,19 @@ document.getElementById('pause-overlay').classList.remove('show');
 document.getElementById('gc').style.display='block';
 document.getElementById('kniffel-ui').style.display='none';
 document.getElementById('kniffel-ui').innerHTML='';
-// Remove any lingering overlay divs (e.g. snake-gameover)
+// Entferne alle noch vorhandenen Overlay-Divs (z.B. "snake-gameover")
 const ca=document.getElementById('canvas-area');
 if(ca) ca.querySelectorAll('div:not(#kniffel-ui):not(.pause-overlay):not(#settings-overlay)').forEach(el=>el.remove());
 const names=({snake:t('game.snake'),pong:t('game.pong'),vier:t('game.vier'),battle:t('game.battle'),kniffel:t('game.kniffel')});
 document.getElementById('g-title').textContent=names[type]||type;
 document.getElementById('g-status').textContent=t('game.ready')||'Bereit';
-// Hide restart button in online mode
+// Neustart-Knopf im Online-Modus ausblenden
 const restartBtn=document.querySelector('.ctrl-btn[onclick="restartGame()"]');
 if(restartBtn)restartBtn.style.display=(lastGameOpts&&lastGameOpts.isOnline)?'none':'';
 currentGame={type,loop:null,raf:null,_cleanup:null};
-// Register public lobby on server (all games, even vs AI)
-// Skip if already has a room (kniffel online, invite games)
-// Broadcast game status to friends
+// Öffentliche Lobby auf dem Server registrieren (alle Spiele, auch gegen die KI)
+// Überspringen, wenn bereits ein Raum vorhanden ist (Kniffel online, Spiele mit Einladung)
+// Spielstatus an Freunde senden
 if(fbUser&&!opts.isSpectator)broadcastGameStatus(type,opts.onlineRoomId||'');
 if(fbUser&&!opts.isSpectator&&!opts.onlineRoomId){
 const isAI=opts.players?.[1]?.type==='ai'||!opts.isOnline;
@@ -166,7 +164,7 @@ apiCall('lobbies/create','POST',{game:type,vsAI:isAI,hostName:fbUser.name}).then
 if(res?.roomId)saveActiveLobby(res.roomId,type,fbUser.name,isAI);
 if(res?.roomId){
 if(!opts.onlineRoomId)opts.onlineRoomId=res.roomId;
-// Connect WS as host so room shows as active in lobby
+// WS als Gastgeber verbinden, damit der Raum in der Lobby als aktiv angezeigt wird
 const proto=location.protocol==='https:'?'wss:':'ws:';
 const wsLobby=new WebSocket(proto+'//'+location.host);
 wsLobby.onopen=()=>{
@@ -183,7 +181,7 @@ if(currentGame){
 currentGame._lobbyWs=wsLobby;
 currentGame._lobbyRoomId=res.roomId;
 setTimeout(startCanvasStream,1000);
-// Heartbeat every 30s to keep lobby alive
+// Alle 30 Sekunden ein Heartbeat, um die Lobby aktiv zu halten
 currentGame._heartbeat=setInterval(()=>{
 if(!currentGame)return;
 apiCall('rooms/'+res.roomId+'/sync','POST',{heartbeat:true,ts:Date.now()}).catch(()=>{});
@@ -192,11 +190,11 @@ apiCall('rooms/'+res.roomId+'/sync','POST',{heartbeat:true,ts:Date.now()}).catch
 }
 }).catch(()=>{});
 }
-// Use rAF to ensure layout is complete before reading canvas dimensions
-// Init touch after game initializes
+// Verwende rAF, um sicherzustellen, dass das Layout vollständig ist, bevor die Canvas-Abmessungen ausgelesen werden
+// Init Touch nach Spiel Initialisierung
 setTimeout(()=>initTouchControls(type),500);
 requestAnimationFrame(()=>{
-if(!currentGame)return; // was stopped before frame fired
+if(!currentGame)return; 
 const _st=document.getElementById('g-status');
 if(_st)_st.textContent='Starte '+type+'...';    try{
 if(type==='snake')initSnake(opts);
@@ -247,29 +245,29 @@ document.body.appendChild(el);
 }
 el.style.color=ms<80?'#00f5ff':ms<150?'#ffcc00':'#ff4444';
 el.textContent='🌐 '+ms+'ms';
-// Remove when game stops
+// Entfernen, wenn das Spiel endet
 setTimeout(()=>{if(document.getElementById('ping-display')===el)el.remove();},5000);
 }
 
 function stopAll(){
 clearInterval(_pingInterval);
 document.getElementById('ping-display')?.remove();
-_clearAllLoops(); // kill ALL intervals
-// Clear ingame chat history
+_clearAllLoops(); // ALLE Intervalle löschen
+// Chat-Verlauf im Spiel löschen
 const igmsgs=document.getElementById('igmsgs');
 if(igmsgs)igmsgs.innerHTML='';
-// Hide chat panel
+// Chat-Fenster ausblenden
 const igchat=document.getElementById('igchat');
 if(igchat)igchat.classList.remove('show');
 if(currentGame){
 if(currentGame._cleanup)currentGame._cleanup();
 if(currentGame.raf)cancelAnimationFrame(currentGame.raf);
-// Close lobby WS so room disappears from lobby list
+// Lobby WS schließen, damit der Raum aus der Lobby-Liste verschwindet
 stopCanvasStream();
-broadcastGameStatus('',''); // clear game status
+broadcastGameStatus('',''); // Spielstatus löschen
 if(currentGame._lobbyRoomId){
 removeActiveLobby(currentGame._lobbyRoomId);
-// Mark room as closed on server
+// Raum auf dem Server als geschlossen markieren
 apiCall('rooms/'+currentGame._lobbyRoomId+'/sync','POST',{state:'closed',ts:Date.now()}).catch(()=>{});
 }
 if(currentGame._heartbeat)clearInterval(currentGame._heartbeat);
@@ -280,9 +278,9 @@ document.getElementById('pause-overlay').classList.remove('show');
 paused=false;
 }
 function initChatOverlay(overlay){
-// Chat overlay just needs the DM list to work
+// Damit das Chat-Overlay funktioniert, wird lediglich die DM-Liste benötigt
 try{renderDMList&&renderDMList();}catch(e){}
-// Wire up send button in overlay
+// Sendetaste im Overlay verbinden
 const sendBtn=overlay.querySelector('.chat-send-btn,.send-btn,[onclick*="sendDM"],[onclick*="sendMsg"]');
 const inp=overlay.querySelector('.chat-input,input[type="text"]');
 if(sendBtn&&inp){
@@ -320,7 +318,7 @@ btn.style.display='none';
 function restartGame(){
 if(!lastGameType)return;
 if(lastGameOpts&&lastGameOpts.isOnline){
-// Online: create fresh room of same game type
+// Online: Neuen Raum desselben Spieltyps erstellen
 stopAll();
 createOnlineRoom(lastGameType);
 return;
@@ -328,9 +326,8 @@ return;
 startGame(lastGameType,lastGameOpts);
 }
 
-// ════════════════════════════════════════════════
 // SOUND
-// ════════════════════════════════════════════════
+
 let audioCtx=null;
 const settings={sound:true,music:false,notify:true,anim:true,hints:true};
 function getACtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
@@ -355,24 +352,24 @@ const N=10;
 const COL_LABELS=['A','B','C','D','E','F','G','H','I','J'];
 const isDE=currentLang!=='en';
 
-// ── Board renderer ───────────────────────────────────────
+// Board-Renderer
 function renderBoard(ships, shotHits, shotMisses, label, accentColor){
-// Normalize all keys to "r,c" strings
+// Alle Schlüssel auf "r,c"-Zeichenfolgen normieren
 const hitKeys=new Set();
 shotHits.forEach(k=>hitKeys.add(typeof k==='number'?`${Math.floor(k/10)},${k%10}`:String(k)));
 const missKeys=new Set();
 shotMisses.forEach(k=>missKeys.add(typeof k==='number'?`${Math.floor(k/10)},${k%10}`:String(k)));
 
-// Map ship cells + sunk state
-const shipMap=new Map(); // "r,c" -> {sunk}
+// Zellen mit Schiff + versenkte Zellen
+const shipMap=new Map(); 
 ships.forEach(ship=>{
 ship.cells.forEach(({r,c})=>shipMap.set(`${r},${c}`,{sunk:!!ship.sunk}));
 });
 
-const CS=26; // cell size px
+const CS=26; // Zellengröße in px
 let rows='';
 
-// Column headers
+// Spaltenüberschriften
 rows+=`<div style="display:flex;gap:1px;margin-bottom:2px;padding-left:18px">
 ${COL_LABELS.map(c=>`<div style="width:${CS}px;text-align:center;font-size:8px;font-weight:700;color:rgba(255,255,255,.35)">${c}</div>`).join('')}
 </div>`;
@@ -389,23 +386,23 @@ const hasShip=!!ship;
 let bg,bdr,inner='';
 
 if(isHit && hasShip){
-// 💥 Torpedo hit on ship — bright red, unmistakable
+//  Getroffener Schuss
 const sunkGlow=ship.sunk?'0 0 10px #ff1744,inset 0 0 8px rgba(255,23,68,.4)':'0 0 6px rgba(255,100,50,.6)';
 bg=ship.sunk?'#b71c1c':'#c62828';
 bdr=ship.sunk?'2px solid #ff1744':'2px solid #ff5252';
 inner=`<div style="font-size:13px;line-height:1;filter:drop-shadow(0 0 3px #ff1744)">💥</div>`;
 } else if(isMiss){
-// ○ Missed shot — clear white circle, contrasts water
+// Verfehlter Schuss
 bg='rgba(20,40,70,.8)';
 bdr='1px solid rgba(100,160,255,.4)';
 inner=`<div style="width:8px;height:8px;border-radius:50%;border:2px solid rgba(120,180,255,.8);background:rgba(100,180,255,.15)"></div>`;
 } else if(hasShip){
-// ▪ Intact ship — solid grey-blue, clearly visible
+// Unbeschädigtes Schiff 
 bg='rgba(40,80,120,.9)';
 bdr='2px solid rgba(80,140,200,.7)';
 inner=`<div style="width:${CS-8}px;height:${CS-8}px;border-radius:2px;background:rgba(100,160,220,.5)"></div>`;
 } else {
-// Empty water — dark, minimal
+// Leeres Wasser
 bg='rgba(5,15,35,.7)';
 bdr='1px solid rgba(255,255,255,.06)';
 }
@@ -418,7 +415,7 @@ cells+=`<div style="width:${CS}px;height:${CS}px;background:${bg};border:${bdr};
 rows+=`<div style="display:flex;gap:1px;margin-bottom:1px">${cells}</div>`;
 }
 
-// Stats row
+// Statistikzeile
 const hits=[...hitKeys].length;
 const misses=[...missKeys].length;
 const total=hits+misses;
@@ -448,7 +445,7 @@ return `<div style="display:flex;flex-direction:column;align-items:center;gap:8p
 </div>`;
 }
 
-// ── Gather data ──────────────────────────────────────────
+// Daten sammeln 
 const bd=(currentGame&&currentGame._battleData)||{};
 const myShips=bd.myShips||[];
 const oppShips=bd.oppShips||[];
@@ -457,7 +454,7 @@ const myMissesOnOpp=bd.myMissesOnOpp||new Set();
 const oppHitsOnMe=bd.oppHitsOnMe||new Set();
 const oppMissesOnMe=bd.oppMissesOnMe||new Set();
 
-// ── Build HTML ───────────────────────────────────────────
+// HTML erstellen 
 const winColor=won?'#00f5ff':'#ff4444';
 const winGlow=won?'0 0 40px rgba(0,245,255,.4)':'0 0 40px rgba(255,68,68,.4)';
 const winEmoji=won?'🏆':'💀';
@@ -501,7 +498,7 @@ div.innerHTML=`
 
 ca.appendChild(div);
 
-// ── Button handlers ──────────────────────────────────────
+// Knöpfe
 div.querySelector('#battle-rematch').addEventListener('click',async()=>{
 div.remove();
 if(lastGameOpts?.isOnline){
@@ -557,7 +554,7 @@ div.querySelector('#rematch-local-btn').addEventListener('click',()=>{div.remove
 div.querySelector('#menu-local-btn').addEventListener('click',()=>{div.remove();stopAndHome();});
 }
 
-// ── TOUCH CONTROLS ───────────────────────────────
+// BEDIENELEMENTE 
 let _touchStartX=0,_touchStartY=0;
 
 function initTouchControls(game){
@@ -565,7 +562,7 @@ const gc=document.getElementById('gc');
 if(!gc||!('ontouchstart' in window))return;
 
 if(game==='snake'||game==='pacman'){
-// Swipe to change direction
+// Wische, um die Richtung zu ändern
 gc.addEventListener('touchstart',e=>{
 _touchStartX=e.touches[0].clientX;
 _touchStartY=e.touches[0].clientY;
@@ -582,7 +579,7 @@ else{key=dy>0?'ArrowDown':'ArrowUp';}
 document.dispatchEvent(new KeyboardEvent('keydown',{key,bubbles:true}));
 e.preventDefault();
 },{passive:false});
-// Show swipe hint overlay
+// Overlay mit Wischhinweis anzeigen
 const hint=document.createElement('div');
 hint.style.cssText='position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);color:rgba(255,255,255,.5);font-size:10px;padding:3px 8px;border-radius:6px;pointer-events:none;z-index:3';
 hint.textContent=currentLang==='en'?'⬅ Swipe to control ➡':'⬅ Wischen zum Steuern ➡';
@@ -591,7 +588,7 @@ setTimeout(()=>hint.remove(),3000);
 }
 
 if(game==='pong'){
-// Touch drag for paddle
+// Tippen und ziehen
 gc.addEventListener('touchmove',e=>{
 const rect=gc.getBoundingClientRect();
 const y=e.touches[0].clientY-rect.top;
@@ -612,7 +609,7 @@ apiCall('rooms/'+currentGame._lobbyRoomId+'/sync','POST',{s1,s2}).catch(()=>{});
 }
 }
 
-// Stream canvas to spectators via WS
+// Canvas über WS an die Zuschauer streamen
 let _streamTimer=null;
 function startCanvasStream(){
 if(_streamTimer)clearInterval(_streamTimer);
@@ -623,14 +620,14 @@ try{
 let frame=null;
 const c=document.getElementById('gc');
 if(c&&c.style.display!=='none'&&c.width>0){
-// Normal canvas game
+// Normales Canvas-Spiel
 frame=c.toDataURL('image/jpeg',0.6);
 } else {
-// Kniffel or other DOM-based game - capture the whole game area
+// Kniffel oder ein anderes DOM-basiertes Spiel – den gesamten Spielbereich erfassen
 const area=document.getElementById('canvas-area');
 if(!area)return;
-// Use html2canvas-like approach: draw to offscreen canvas
-// Simple: just send a score update instead for DOM games
+// Verwende einen Ansatz ähnlich wie bei "html2canvas"
+// Ganz einfach: Schickt bei DOM-Spielen stattdessen einfach eine Aktualisierung des Spielstands
 const s1=document.getElementById('s1')?.textContent||'0';
 const s2=document.getElementById('s2')?.textContent||'0';
 ws.send(JSON.stringify({type:'sync',data:{s1:parseInt(s1)||0,s2:parseInt(s2)||0}}));
@@ -644,9 +641,8 @@ function stopCanvasStream(){
 if(_streamTimer){clearInterval(_streamTimer);_streamTimer=null;}
 }
 
-// ════════════════════════════════════════════════
-// THEME & SETTINGS
-// ════════════════════════════════════════════════
+// THEME & EINSTELLUNGEN
+
 function setTheme(t,btn){
 document.body.className='theme-'+t;
 document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
@@ -659,11 +655,9 @@ if(btn)btn.classList.add('active');
 }
 function toggleSetting(k,el){settings[k]=!settings[k];if(el)el.classList.toggle('on',settings[k]);}
 
-// ════════════════════════════════════════════════
-// SOCIAL - Real friends & chat via WebSocket
-// ════════════════════════════════════════════════
+// SOCIAL – Freunde & Chatten über WebSocket
 
-let dmHistories={}; // uid -> [{from,text,ts,own}]
+let dmHistories={}; 
 
 const AVATARS=['😀','😎','🤖','👾','🎮','🦊','🐉','🦁','🐺','🎯','⚡','🔥','💎','🌟','🏆','🎲','🚀','🦄','🐼','🎭'];
 
@@ -695,13 +689,13 @@ btn.style.borderColor='var(--c1)';
 modal.querySelector('#av-save').addEventListener('click',()=>{
 if(!selected)return;
 if(currentUser)currentUser.avatar=selected;
-// Save to localStorage
+// In localStorage speichern
 try{const u=JSON.parse(localStorage.getItem('ghUser')||'{}');u.avatar=selected;localStorage.setItem('ghUser',JSON.stringify(u));}catch(ex){}
-// Update display
+// Anzeige aktualisieren
 const av=document.getElementById('profile-av-display');if(av){av.textContent=selected;av.style.fontSize='24px';}
 const sb=document.getElementById('sb-av');if(sb){sb.textContent=selected;sb.style.fontSize='16px';}
 const ta=document.getElementById('top-av');if(ta){ta.textContent=selected;ta.style.fontSize='16px';}
-// Save to server + broadcast to friends
+// Auf dem Server speichern + an Freunde senden
 if(fbToken){
 apiCall('avatar','POST',{avatar:selected}).then(r=>{
 if(r&&r.ok)showToast(currentLang==='en'?'Avatar saved! ':'Avatar gespeichert! '+selected);
@@ -762,7 +756,7 @@ return;
 }
 resultsEl.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">Suche...</div>';
 
-// Try HTTP search first, fallback to leaderboard search
+// Zuerst HTTP-Suche versuchen, dann auf die Ranglistensuche zurückgreifen
 let results=[];
 try{
 const res=await apiCall('leaderboard','GET');
@@ -797,7 +791,7 @@ style="padding:6px 14px;background:var(--c1);color:#000;border:none;border-radiu
 }).join('');
 }
 
-// Wire search in modal
+// Suche im Modal
 document.addEventListener('DOMContentLoaded',()=>{
 const af=document.getElementById('af-search');
 if(af){
@@ -805,7 +799,7 @@ let t=null;
 af.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>searchAddFriend(af.value.trim()),300);});
 af.addEventListener('keydown',e=>{if(e.key==='Escape')closeAddFriend();});
 }
-// Wire chat page search-input via event delegation
+// Suchfeld auf der Chat-Seite über Ereignissen
 document.addEventListener('input',e=>{
 if(!e.target||e.target.id!=='search-input')return;
 const q=e.target.value.trim();
@@ -827,7 +821,7 @@ results=res.leaderboard
 }catch(ex){}
 if(!results.length){out.innerHTML='<div style="padding:6px;font-size:11px;color:var(--muted)">Niemanden gefunden</div>';return;}
 out.innerHTML='';
-// Also search own friends list first
+// Zuerst eigene Freundesliste durchsuchen
 const friendMatches=friendsList.filter(f=>f.name.toLowerCase().includes(q.toLowerCase()));
 const nonFriendResults=results.filter(u=>!friendsList.find(f=>f.uid===u.uid));
 const allResults=[...friendMatches.map(f=>({...f,isFriend:true})),...nonFriendResults.map(u=>({...u,isFriend:false}))];
@@ -850,7 +844,7 @@ div.innerHTML='<div style="display:flex;align-items:center;gap:6px;flex:1;min-wi
 ?'<span style="font-size:10px;color:var(--c1);flex-shrink:0">💬 Chat →</span>'
 :'<button class="add-btn" style="padding:3px 8px;background:var(--c1);color:#000;border:none;border-radius:4px;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0">+ Freund</button>');
 if(u.isFriend){
-// Click anywhere to open DM
+// Klicke auf beliebige Stelle, um die DM zu öffnen
 div.addEventListener('click',()=>{
 document.getElementById('search-input').value='';
 out.innerHTML='';
@@ -870,12 +864,12 @@ out.appendChild(div);
 });
 });
 
-// ── Chat Slide Panel ────────────────────────────────────────────
+// Chat-Seitenleiste 
 let _cspFriend = null;
 
 function _ensureChatPanel() {
   if (document.getElementById('chat-slide-panel')) return;
-  // Add CSS
+  // CSS hinzufügen
   const st = document.createElement('style');
   st.textContent = `
 /* ── Chat Panel ── */
@@ -897,7 +891,7 @@ function _ensureChatPanel() {
 #chat-slide-panel .csp-inp button{padding:7px 14px;background:var(--c1);color:#000;border:none;border-radius:8px;font-weight:800;cursor:pointer;font-family:inherit;}
 `;
   document.head.appendChild(st);
-  // Build HTML
+  // HTML erstellen
   const p = document.createElement('div');
   p.id = 'chat-slide-panel';
   p.innerHTML = `
@@ -916,9 +910,9 @@ function _ensureChatPanel() {
 }
 
 function navChat(el) {
-  // Not in-game: navigate to full chat page normally
+  // Nicht im Spiel: Wechsel wie gewohnt zur vollständigen Chat-Seite
   if (!currentGame) { nav('chat', el); return; }
-  // In-game: use slide panel
+  // Im Spiel: Seitenleiste benutzen
   _ensureChatPanel();
   const p = document.getElementById('chat-slide-panel');
   const isOpen = p.classList.contains('open');
