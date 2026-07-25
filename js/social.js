@@ -19,7 +19,7 @@ const waitEl=document.getElementById('kniffel-waiting');
 if(waitEl){waitEl.remove();startKniffelOnline(msg.players,msg.roomId);}
 }
 if(msg.type==='friends_list'){
-// Deduplicate by uid
+// Duplikate nach UID entfernen
 const rawFriends=msg.friends||[];
 const seen=new Set();
 friendsList=rawFriends.filter(f=>{if(seen.has(f.uid))return false;seen.add(f.uid);return true;});
@@ -52,9 +52,9 @@ saveDMsLocal();
 if(activeDmUid===uid){
 renderDMMessages(uid);
 } else {
-// Show toast notification
+// Toast-Benachrichtigung anzeigen
 showToast('💬 '+msg.fromName+': '+msg.text.slice(0,40),4000);
-// Show unread badge on friend in sidebar
+// In der Seitenleiste ein Symbol für ungelesene Nachrichten bei Freunden anzeigen
 const friendEl=document.getElementById('friend-'+uid);
 if(friendEl&&!document.getElementById('dm-badge-'+uid)){
 const badge=document.createElement('span');
@@ -63,12 +63,12 @@ badge.style.cssText='background:var(--c3);color:#fff;border-radius:50%;width:16p
 badge.textContent='!';
 friendEl.appendChild(badge);
 }
-// Update DM list unread count
+// Anzahl der ungelesenen Direktnachrichten aktualisieren
 renderDMList();
 }
 }
 if(msg.type==='dm_sent'){
-// Confirmed by server - already in local history
+// Serverbestätigung - bereits im lokalen Verlauf
 }
 if(msg.type==='search_results') renderSearchResults(msg.results);
 if(msg.type==='game_invite'){
@@ -82,9 +82,9 @@ if(msg.type==='igchat'){
 const sameRoom=!msg.roomId||!lastGameOpts?.onlineRoomId||msg.roomId===lastGameOpts.onlineRoomId;
 if(sameRoom){
 igChatAddMsg(msg.from,msg.text,false);
-// Always notify
+// Immer benachrichtigen
 showToast('💬 '+msg.from+': '+msg.text.slice(0,30));
-// Flash chat button
+// Flash Chat Knopf
 const chatBtn=document.querySelector('.igchat-toggle');
 if(chatBtn){
 chatBtn.style.background='var(--c3)';
@@ -107,7 +107,7 @@ renderFriendsSidebar();renderDMList();
 socialWs.onclose=()=>{ setTimeout(initSocialWS,3000); };
 }
 
-// Poll for friend requests every 30s as fallback
+// Alle 30 Sekunden nach Freundschaftsanfragen abfragen (als Fallback)
 if(!window._friendReqPoll){
   window._friendReqPoll = setInterval(()=>{
     if(fbUser) loadFriendRequests&&loadFriendRequests();
@@ -118,7 +118,7 @@ function renderFriendsSidebar(){
 const list=document.getElementById('friends-list');
 const hdr=document.getElementById('online-hdr');
 if(!list)return;
-// If no friends loaded yet, try fetching
+// Falls noch keine Freunde geladen wurden, versuche sie abzurufen
 if(!friendsList.length&&fbUser&&fbToken){
   setTimeout(()=>{ if(typeof loadFriendRequests==='function')loadFriendRequests(); }, 500);
 }
@@ -139,11 +139,11 @@ return '<div class="friend" style="position:relative" id="friend-'+f.uid+'">'
 +'<button data-remove-friend="'+f.uid+'" title="Freund entfernen" style="background:transparent;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 4px;opacity:0;transition:opacity .15s">✕</button>'
 +'</div>';
 }).join('')||('<div style="padding:4px 8px;font-size:11px;color:var(--muted)">'+(currentLang==='en'?'No friends yet':'Noch keine Freunde')+'</div>');
-// Wire DM clicks
+// DM Klicks
 list.querySelectorAll('[data-dm-uid]').forEach(el=>{
 el.addEventListener('click',()=>openDM(el.dataset.dmUid,el.dataset.dmName));
 });
-// Show remove button on hover
+// Schaltfläche "Entfernen" beim Überfahren mit der Maus anzeigen
 list.querySelectorAll('.friend').forEach(el=>{
 const btn=el.querySelector('[data-remove-friend]');
 if(!btn)return;
@@ -192,7 +192,7 @@ openDM(uid,name);
 }
 
 function renderFriendRequests(){
-// Show in sidebar
+// In der Seitenleiste anzeigen
 const sec=document.getElementById('friend-requests-section');
 if(!sec)return;
 if(!pendingRequests.length){sec.style.display='none';return;}
@@ -208,7 +208,7 @@ sec.innerHTML=
 +'<button data-decline="'+r.uid+'" style="padding:4px 8px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:inherit">✗ Ablehnen</button>'
 +'</div></div>'
 ).join('');
-// Wire buttons
+// Knöpfe
 sec.querySelectorAll('[data-accept]').forEach(btn=>btn.addEventListener('click',()=>acceptFriendRequest(btn.dataset.accept)));
 sec.querySelectorAll('[data-decline]').forEach(btn=>btn.addEventListener('click',()=>declineFriendRequest(btn.dataset.decline)));
 }
@@ -219,7 +219,7 @@ nav('chat',document.querySelectorAll('.nav-item')[2]);
 const nameEl=document.getElementById('chat-with-name');
 const statusEl=document.getElementById('chat-with-status');
 const invBtn=document.getElementById('chat-invite-btn');
-// Set avatar in chat header
+// Avatar in der Chat-Kopfzeile festlegen
 const chatAv=document.getElementById('chat-with-av');
 if(chatAv){const f2=friendsList.find(x=>x.uid===uid);chatAv.textContent=f2?.avatar||name.slice(0,2).toUpperCase();chatAv.style.fontSize=f2?.avatar?'18px':'10px';}
 const inp=document.getElementById('cinput');
@@ -231,7 +231,7 @@ if(invBtn){invBtn.style.display='';invBtn.onclick=()=>sendGameInvite(uid);}
 if(inp){inp.disabled=false;inp.placeholder='Nachricht an '+name+'...';}
 if(sendBtn)sendBtn.disabled=false;
 renderDMList();
-// Load history from server
+// Verlauf vom Server laden
 if(fbUser&&(!dmHistories[uid]||dmHistories[uid].length===0)){
 try{
 const res=await apiCall('dm/'+uid,'GET');
@@ -243,10 +243,10 @@ from:m.fromName,text:m.text,ts:m.ts,own:m.fromUid===fbUser.uid
 }catch(e){}
 }
 renderDMMessages(uid);
-// Clear unread badge
+// Anzeige für ungelesene Nachrichten löschen
 const badge=document.getElementById('dm-badge-'+uid);
 if(badge)badge.remove();
-// Wire send
+// Senden
 if(inp)inp.onkeydown=(ev)=>{if(ev.key==='Enter')sendMsg();};
 if(sendBtn)sendBtn.onclick=sendMsg;
 }
@@ -316,10 +316,10 @@ if(!fbUser){showToast(t('auth.need.login'));return;}
 const res=await apiCall('friends/request','POST',{toUid:uid});
 if(res&&!res.error){
 showToast(t('friend.request.sent')+name+t('friend.request.sent2'));
-// Also via WS if connected
+// Auch über WS, sofern eine Verbindung besteht
 if(socialWs&&socialWs.readyState===1)
 socialWs.send(JSON.stringify({type:'friend_request',toUid:uid}));
-// Update UI - mark as pending
+// Benutzeroberfläche aktualisieren – als "ausstehend" markieren
 document.querySelectorAll('[data-add-friend="'+uid+'"]').forEach(btn=>{
 btn.textContent='⏳ Ausstehend';btn.disabled=true;
 });
@@ -359,7 +359,7 @@ if(!fbUser){showToast(t('auth.need.login'));return;}
 const friend=friendsList.find(f=>f.uid===toUid);
 const friendName=friend?.name||'Freund';
 
-// Show game picker
+// Spielauswahl anzeigen
 const old=document.getElementById('invite-modal');
 if(old)old.remove();
 const modal=document.createElement('div');
@@ -393,14 +393,14 @@ document.body.appendChild(modal);
 modal.querySelector('#inv-close').addEventListener('click',()=>modal.remove());
 modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
 
-// Hover effect
+// Hover-Effekt
 modal.querySelectorAll('[data-game]').forEach(btn=>{
 btn.addEventListener('mouseenter',()=>{if(!btn.classList.contains('sel')){btn.style.borderColor='var(--c1)';btn.style.background='rgba(0,245,255,.05)';}});
 btn.addEventListener('mouseleave',()=>{if(!btn.classList.contains('sel')){btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';}});
 btn.addEventListener('click',()=>{
 modal.querySelectorAll('[data-game]').forEach(b=>{b.classList.remove('sel');b.style.borderColor='var(--border)';b.style.background='var(--bg3)';});
 btn.classList.add('sel');btn.style.borderColor='var(--c1)';btn.style.background='rgba(0,245,255,.08)';
-// Show ctrl picker
+// Ctrl-Auswahlfeld anzeigen
 const gameCtrls={snake:['Pfeiltasten','WASD'],pong:['Maus','W/S Tasten','Pfeiltasten'],vier:[],battle:[],kniffel:[]}[btn.dataset.game]||[];
 const ctrlDiv=modal.querySelector('#inv-ctrl');
 if(gameCtrls.length){
@@ -528,14 +528,13 @@ if(!txt)return;
 inp.value='';
 const myName=currentUser?.name||fbUser?.name||'Du';
 igChatAddMsg(myName,txt,true);
-// Send via socialWs if online game
+// Bei Online-Spielen über socialWs senden
 if(lastGameOpts?.isOnline&&socialWs&&socialWs.readyState===1){
 socialWs.send(JSON.stringify({type:'igchat',roomId:lastGameOpts.onlineRoomId||'',from:myName,uid:fbUser?.uid||'',text:txt}));
 }
 }
 
-// ════════════════════════════════════════════════
 // LOBBY
-// ════════════════════════════════════════════════
+
 let lobbyGame='snake',lobbyIcon='🐍';
 function toggleCreatePanel(){const p=document.getElementById('create-panel');p.classList.toggle('show');}
