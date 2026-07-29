@@ -56,18 +56,18 @@ else{msg.style.color='#ff4444';msg.textContent='❌ '+r.msg;}
 
 async function fbSaveScore(game, score) {
 if(!score||score<=0)return;
-// gh_scores = highscore per game (for leaderboard)
-// gh_total = cumulative total (adds up every win)
+// gh_scores = Höchstpunktzahl pro Spiel (für die Rangliste)
+// gh_total = kumulierte Gesamtpunktzahl (addiert jeden Sieg)
 try{
-// Update highscores
+// Highscores aktualisieren
 const scores=JSON.parse(localStorage.getItem('gh_scores')||'{}');
 if(!scores[game]||score>scores[game])scores[game]=score;
 localStorage.setItem('gh_scores',JSON.stringify(scores));
-// Update cumulative total
+// Kumulierte Gesamtpunktzahl aktualisieren
 const prevTotal=parseInt(localStorage.getItem('gh_total')||'0');
 const newTotal=prevTotal+score;
 localStorage.setItem('gh_total',String(newTotal));
-// Update currentUser
+// Aktuellen Benutzer aktualisieren
 if(currentUser){
 currentUser.scores=scores;
 currentUser.total=newTotal;
@@ -75,19 +75,19 @@ updateUserUI();
 }
 showToast('🏆 +'+score+t('points.suffix')+'! '+t('ui.total')+': '+newTotal,2000);
 }catch(ex){}
-// Save to server if logged in
+// Auf dem Server speichern, wenn der Benutzer eingeloggt ist
 if(!fbToken)return;
 try{
 const res=await apiCall('scores','POST',{game,score});
 if(res&&res.scores&&currentUser){
 currentUser.scores=res.scores;
-// Don't overwrite local cumulative total with server highscore total
+// Lokale Gesamtpunktzahl beibehalten und nicht durch den Serverwert überschreiben
 updateUserUI();
 }
 }catch(ex){}
 }
 
-// DB helpers (same interface as before)
+// Datenbank-Hilfsfunktionen (gleiche Schnittstelle wie zuvor)
 async function fbGet(path) {
 return await apiCall(path.replace('rooms/', 'rooms/').replace('/sync', '/sync'), 'GET');
 }
@@ -106,7 +106,7 @@ await apiCall('rooms/' + parts[1] + '/sync', 'POST', data);
 return true;
 }
 if (parts[0] === 'rooms' && !parts[2]) {
-// Update room (e.g. join)
+// Raum aktualisieren (z. B. Beitritt)
 if (data.guest && data.state === 'playing') {
 await apiCall('rooms/' + parts[1] + '/join', 'POST', {});
 return true;
@@ -123,14 +123,14 @@ return true;
 }
 
 function initFirebase() {
-// Restore session from localStorage
+// Sitzung aus dem localStorage wiederherstellen
 try {
 const savedToken = localStorage.getItem('ghToken');
 const savedUser = localStorage.getItem('ghUser');
 if (savedToken && savedUser) {
 fbToken = savedToken;
 fbUser = JSON.parse(savedUser);
-// Restore scores from saved user data
+// Punktzahlen aus den gespeicherten Benutzerdaten wiederherstellen
 const savedUserData = JSON.parse(savedUser);
 const ghScores=JSON.parse(localStorage.getItem('gh_scores')||'{}');
 const ghTotal=parseInt(localStorage.getItem('gh_total')||'0');
@@ -141,7 +141,7 @@ currentUser = { ...fbUser, total: finalTotal, scores: mergedScores, avatar: save
 window._fbUser=fbUser;
 updateUserUI();
 setTimeout(initSocialWS,800);
-// Load scores in background
+// Punktzahlen im Hintergrund laden
 apiCall('login', 'POST', {}).catch(() => {});
 }
 } catch(e) {}
@@ -152,14 +152,14 @@ let onlineRoomId=null,onlineGameType=null,onlineRole=null,onlinePollTimer=null;
 
 async function createOnlineRoom(gameType){
 if(!fbUser||!fbToken){showToast(t('auth.need.login'));return;}
-// Kniffel: show waiting room for multiple players
+// Kniffel: Warteraum für mehrere Spieler
 if(gameType==='kniffel'){
 showKniffelWaitingRoom();
 return;
 }
 showToast(t('lobby.creating'));
 
-// Create room on our server
+// Raum auf Server erstellen
 const res = await apiCall('rooms/create', 'POST', { game: gameType });
 if(res.error||!res.roomId){showToast(t('error.generic')+': '+(res.error||t('error.room.creating')));return;}
 
@@ -170,7 +170,7 @@ onlineRole='host';
 
 showOnlineWaiting(roomId,gameType);
 
-// Poll for guest joining every 2 seconds
+// Alle 2 Sekunden prüfen, ob ein Gast beigetreten ist
 onlinePollTimer=setInterval(async()=>{
 const room=await apiCall('rooms/'+roomId,'GET');
 if(!room||room.error){clearInterval(onlinePollTimer);return;}
@@ -193,12 +193,12 @@ const roomId=code.trim().toUpperCase();
 const room=await apiCall('rooms/'+roomId,'GET');
 if(!room||room.error){showToast('❌ '+t('error.room.not.found'));return;}
 
-// Kniffel multi: join as additional player
+// Kniffel-Multiplayer: Als zusätzlicher Spieler beitreten
 if(room.game==='kniffel'){
 const joinRes=await apiCall('rooms/'+roomId+'/join-multi','POST',{name:fbUser.name});
 if(!joinRes||joinRes.error){showToast('❌ '+(joinRes?.error||t('error.generic')));return;}
 showToast(t('lobby.joined'));
-// Wait for game_start
+// Warte auf Spielstart
 window._kniffelJoinPoll=setInterval(async()=>{
 const r=await apiCall('rooms/'+roomId+'/players','GET');
 if(r?.state==='started'){
@@ -231,7 +231,7 @@ onlineRoomId=null;
 function saveActiveLobby(roomId,game,hostName,vsAI){
 try{
 const lobbies=JSON.parse(localStorage.getItem('gh_active_lobbies')||'[]');
-// Keep only fresh lobbies (max 30min), remove duplicates for same host
+// Nur aktuelle Lobbys werden behalten (maximal 30 Minuten), Duplikate desselben Hosts werden entfernen
 const filtered=lobbies.filter(l=>l.roomId!==roomId&&l.hostName!==hostName&&(Date.now()-l.ts)<1800000);
 filtered.push({roomId,game,hostName,vsAI,ts:Date.now()});
 localStorage.setItem('gh_active_lobbies',JSON.stringify(filtered.slice(-10)));
@@ -251,11 +251,11 @@ const res=await apiCall('rooms/create','POST',{game:'kniffel'});
 if(!res?.roomId){showToast(t('lobby.error'));return;}
 const roomId=res.roomId;
 onlineRoomId=roomId;
-// Register as public lobby so others can find and join it
+// Als öffentliche Lobby registrieren, damit andere Spieler sie finden
 await apiCall('lobbies/create','POST',{game:'kniffel',vsAI:false,hostName:fbUser.name,roomId}).catch(()=>{});
 saveActiveLobby(roomId,'kniffel',fbUser.name,false);
 
-// Connect WS so room appears as active in lobby list
+// WebSocket verbinden, damit der Raum als aktive Lobby angezeigt wird
 const proto=location.protocol==='https:'?'wss:':'ws:';
 const wsKniffel=new WebSocket(proto+'//'+location.host);
 wsKniffel.onopen=()=>{
@@ -299,13 +299,13 @@ el.innerHTML=`
 </div>`;
 document.body.appendChild(el);
 
-// Copy link
+// Link kopieren
 el.querySelector('#kniffel-share-link').addEventListener('click',()=>{
 navigator.clipboard.writeText(shareUrl).catch(()=>{});
 showToast(t('lobby.copy'));
 });
 
-// Start button
+// Startknopf
 el.querySelector('#kniffel-start-btn').addEventListener('click',async()=>{
 const res2=await apiCall('rooms/'+roomId+'/start','POST',{});
 if(res2?.ok){
@@ -314,7 +314,7 @@ startKniffelOnline(res2.players||[{uid:fbUser.uid,name:fbUser.name}],roomId);
 }
 });
 
-// Cancel
+// Abbrechen
 el.querySelector('#kniffel-cancel-btn').addEventListener('click',()=>{
 el.remove();
 if(window._kniffelHostWs)try{window._kniffelHostWs.close();}catch(ex){}
@@ -322,7 +322,7 @@ clearInterval(window._kniffelPoll);
 cancelOnlineWait();
 });
 
-// Poll for players joining
+// Auf beitretende Spieler prüfen
 window._kniffelPoll=setInterval(async()=>{
 if(!document.getElementById('kniffel-waiting')){clearInterval(window._kniffelPoll);return;}
 const r=await apiCall('rooms/'+roomId+'/players','GET');
@@ -344,7 +344,7 @@ list.innerHTML=players.map((p,i)=>`
 <span style="font-size:13px;color:#fff;font-weight:700">${p.name}</span>
 ${i===0?'<span style="font-size:10px;color:#ffd700;margin-left:auto">👑 Host</span>':''}
 </div>`).join('');
-// Update count
+// Spieleranzahl aktualisieren
 const title=document.querySelector('#kniffel-waiting [style*="Spieler"]');
 if(title)title.textContent=t('lobby.players.count')+' ('+players.length+'/6)';
 }
@@ -358,13 +358,13 @@ playerNames:players.map(p=>p.name),
 isHost:players[0]?.uid===fbUser?.uid
 };
 startGame('kniffel',opts);
-// Keep host WS alive for spectators - reuse it as lobby WS
+// Host-WebSocket für Zuschauer aktiv halten
 if(window._kniffelHostWs&&window._kniffelHostWs.readyState===1){
 if(currentGame){
 currentGame._lobbyWs=window._kniffelHostWs;
 currentGame._lobbyRoomId=roomId;
 setTimeout(startCanvasStream,1500);
-// Heartbeat every 30s
+
 currentGame._heartbeat=setInterval(()=>{
 if(!currentGame)return;
 apiCall('rooms/'+roomId+'/sync','POST',{heartbeat:true,ts:Date.now()}).catch(()=>{});
@@ -374,14 +374,14 @@ apiCall('rooms/'+roomId+'/sync','POST',{heartbeat:true,ts:Date.now()}).catch(()=
 }
 
 function showFriendOnlineStatus(){
-// Show which friends are currently playing
+// Anzeigen, welche Freunde gerade spielen
 const onlinePlaying=friendsList.filter(f=>f.online&&f.currentGame);
 if(!onlinePlaying.length)return;
-// Could show in lobby or as toast
+// Kann in der Lobby oder als Toast angezeigt werden
 }
 
 function broadcastGameStatus(gameType,roomId){
-// Tell friends what game we're playing
+// Freunden mitteilen, welches Spiel gespielt wird
 if(socialWs&&socialWs.readyState===1){
 socialWs.send(JSON.stringify({type:'game_status',game:gameType,roomId:roomId||''}));
 }
@@ -430,16 +430,16 @@ shareUrl+
 '<span style="font-size:13px;color:#6060a0" id="waiting-status">Warte auf Verbindung...</span>'+
 '</div>'+
 
-// Cancel button
+// Abbrechenknopf
 '<button id="cancel-wait-btn" style="padding:11px 32px;background:transparent;border:1px solid #1e1e38;color:#6060a0;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .2s">← Abbrechen</button>'+
 
-// Pulse animation
+// Pulse-Animation
 '<style>@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}</style>'+
 '</div>';
 
 document.body.appendChild(el);
 
-// Copy link on click
+// Link beim Anklicken kopieren
 const shareEl=document.getElementById('share-link');
 if(shareEl)shareEl.addEventListener('click',()=>{
 try{
@@ -472,7 +472,7 @@ mode:'Online',
 onlineRole:role,        // 'host' or 'guest'
 onlineRoomId:onlineRoomId,
 opponentName:opponentName,
-// Host = player 1 (left/blue), Guest = player 2 (right/red)
+// Host = Spieler 1 (links/blau), Gast = Spieler 2 (rechts/rot)
 players: role==='host'
 ? [{name:myName,type:'human',color:0},{name:opponentName,type:'online',color:1}]
 : [{name:opponentName,type:'online',color:1},{name:myName,type:'human',color:0}],
@@ -483,7 +483,7 @@ isHost:role==='host',
 startGame(gameType,opts);
 }
 
-// Check URL for auto-join on load
+// URL beim Laden auf automatischen Beitritt prüfen
 (()=>{
 try{
 const params=new URLSearchParams(location.search);
@@ -494,7 +494,7 @@ if(fbUser){
 joinOnlineRoom(joinCode);
 }else{
 showToast(t('auth.need.login'));
-// Store code and join after login
+// Code speichern und nach dem Login beitreten
 sessionStorage.setItem('pendingJoin',joinCode);
 }
 },2000);
@@ -518,10 +518,7 @@ const h=area.clientHeight||area.offsetHeight||460;
 return{w:Math.max(w,200),h:Math.max(h,200)};
 }
 
-// ════════════════════════════════════════════════
-// CORE NAVIGATION
-// ════════════════════════════════════════════════
-// PAGE_TITLES dynamically translated
+// PAGE_TITLES werden dynamisch übersetzt
 function getPageTitle(page){
 const map={
 de:{home:'Spiele',game:'Spielen','lobby-select':'Spielmodus wählen',lobby:'Lobby',
