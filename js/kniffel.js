@@ -1,10 +1,10 @@
 function initKniffel(opts){
-// Support multi-player from lobby opts
+// Support für mehrere Spieler per Lobby-Optionen
 const allPlayers=opts.players||(opts.mode==='Solo'||opts.mode==='solo'
 ?[{name:currentUser?.name||'Du',type:'human',color:0}]
 :[{name:'Du',type:'human',color:0},{name:'Computer',type:'ai',color:5}]);
 const isOnlineKniffel=opts.isOnline&&opts.onlineRoomId;
-// My player index in online mode
+
 const myUid=window._fbUser?.uid||fbUser?.uid;
 const myPlayerIdx=isOnlineKniffel
 ? Math.max(0, allPlayers.findIndex(p=>p.uid===myUid))
@@ -23,9 +23,9 @@ wrap.style.height='100%';
 wrap.style.width='100%';
 wrap.style.overflow='hidden';
 document.getElementById('g-title').textContent='Kniffel';
-// Set score chip labels based on players
+
 document.getElementById('s2lbl').textContent=allPlayers.length>1?allPlayers[1].name.slice(0,8):'—';
-// Hide P2 chip entirely when solo
+
 const _kS2chip=document.getElementById('s2-chip');
 if(_kS2chip)_kS2chip.style.display=allPlayers.length>1?'':'none';
 document.getElementById('g-status').textContent=t('kniffel.start');
@@ -79,15 +79,15 @@ return Object.entries(sc).filter(([k])=>k!=='__done').reduce((a,[,v])=>a+v,0)+(u
 
 let dice=[1,2,3,4,5],held=[false,false,false,false,false];
 let rolls=0,rolling=false;
-let currentPlayerIdx=0; // whose turn it is
-// scores[i] for each player (allPlayers[i])
+let currentPlayerIdx=0; // Wer aktuell am Zug ist
+// scores[i] enthält die Kategorie-Punktzahlen des Spielers allPlayers[i]
 const scores=allPlayers.map(()=>({}));
-// Aliases for backward compat
+
 let pSc=scores[0];
 let aiSc=scores.length>1?scores[1]:{};
 const turn_=()=>allPlayers[currentPlayerIdx];
 
-// Dot positions per face value
+
 const DOTS={
 1:[[.5,.5]],
 2:[[.28,.28],[.72,.72]],
@@ -99,11 +99,11 @@ const DOTS={
 
 function drawDie(ctx,x,y,sz,val,isHeld){
 const r=sz*0.13;
-// Drop shadow
+
 ctx.shadowColor='rgba(0,0,0,0.5)';
 ctx.shadowBlur=sz*0.18;
 ctx.shadowOffsetY=sz*0.08;
-// Face gradient (white die, warm tint if held)
+// Farbverlauf der Würfel
 const g=ctx.createLinearGradient(x,y,x+sz,y+sz);
 if(isHeld){
 g.addColorStop(0,'#ffe9a0');g.addColorStop(1,'#ffbe2e');
@@ -113,11 +113,11 @@ g.addColorStop(0,'#ffffff');g.addColorStop(1,'#d8d8d8');
 ctx.fillStyle=g;
 ctx.beginPath();ctx.roundRect(x,y,sz,sz,r);ctx.fill();
 ctx.shadowBlur=0;ctx.shadowOffsetY=0;
-// Border
+// Rahmen der Würfel
 ctx.strokeStyle=isHeld?'#cc8800':'rgba(0,0,0,0.18)';
 ctx.lineWidth=isHeld?sz*0.05:sz*0.025;
 ctx.stroke();
-// Dots
+// Würfelpunkte
 const dr=sz*0.085;
 (DOTS[val]||[]).forEach(([px,py])=>{
 ctx.fillStyle='#1c1c1c';
@@ -136,7 +136,7 @@ dice=dice.map((v,i)=>held[i]?v:Math.ceil(Math.random()*6));
 render();n++;
 if(n>=8){
 clearInterval(iv);rolling=false;rolls++;sndHit();render();
-// Sync dice to other players
+// Ergebnis mit anderen Spieler synchronisieren
 if(isOnlineKniffel){
 apiCall('rooms/'+opts.onlineRoomId+'/sync','POST',{
 type:'kniffel_dice',
@@ -171,10 +171,10 @@ curSc[id]=calcCat(id,dice);
 document.getElementById('s1').textContent=total(scores[0]);
 sndScore();
 dice=[1,2,3,4,5];held=[false,false,false,false,false];rolls=0;
-// Advance to next player
+// Zum nächsten Spieler wechseln
 currentPlayerIdx=(currentPlayerIdx+1)%numPlayers;
 pSc=scores[0];aiSc=scores.length>1?scores[1]:{};
-// Online sync: save my move to server
+// Online: eigenen Spielzug auf dem Server speichern
 if(isOnlineKniffel){
 apiCall('rooms/'+opts.onlineRoomId+'/sync','POST',{
 type:'kniffel_move',
@@ -204,12 +204,12 @@ const top=parseInt(vals[0][0]),topCount=vals[0][1];
 const avail=CATS.filter(c=>aiSc2[c.id]===undefined);
 const unique=[...new Set(d)].sort((a,b)=>a-b);
 
-// Kniffel: hold all if 4+ same
+// Kniffel
 if(topCount>=4&&avail.find(c=>c.id==='kniffl'))return d.map(v=>v===top);
-// Full house: hold both groups
+// Full house
 if(vals.length===2&&(vals[0][1]===3||vals[0][1]===2)&&avail.find(c=>c.id==='fhouse'))
 return d.map(v=>v===top||v===parseInt(vals[1][0]));
-// Large straight: hold unique sequence
+// Große Straße
 const seqs=[[1,2,3,4,5],[2,3,4,5,6]];
 for(const seq of seqs){
 const have=seq.filter(v=>unique.includes(v));
@@ -218,7 +218,7 @@ const used=new Set();
 return d.map(v=>{if(seq.includes(v)&&!used.has(v)){used.add(v);return true;}return false;});
 }
 }
-// Small straight
+// Kleine Straße
 const smSeqs=[[1,2,3,4],[2,3,4,5],[3,4,5,6]];
 for(const seq of smSeqs){
 const have=seq.filter(v=>unique.includes(v));
@@ -227,26 +227,26 @@ const used=new Set();
 return d.map(v=>{if(seq.includes(v)&&!used.has(v)){used.add(v);return true;}return false;});
 }
 }
-// Four of a kind
+// Vierling
 if(topCount>=3&&avail.find(c=>c.id==='fourK'))return d.map(v=>v===top);
-// Three of a kind
+// Drilling
 if(topCount>=2&&avail.find(c=>c.id==='threeK'))return d.map(v=>v===top);
-// Upper section: target highest available with most dice
+// Oberer Bereich
 const upperMap={ones:1,twos:2,threes:3,fours:4,fives:5,sixes:6};
 let bestUpper=null,bestCount=0;
 Object.entries(upperMap).forEach(([id,num])=>{
 if(aiSc2[id]!==undefined)return;
 const count=d.filter(v=>v===num).length;
-const bonus=num>=4?1.5:1; // prefer high numbers
+const bonus=num>=4?1.5:1;
 if(count*bonus>bestCount*1){bestCount=count;bestUpper=num;}
 });
 if(bestUpper&&bestCount>=2)return d.map(v=>v===bestUpper);
-// Default: hold most common
+
 return d.map(v=>v===top);
 }
 
 function pickBestCategory(){
-// Calculate expected value for each available category
+
 let best=-Infinity,bestId=null;
 const upSum_=()=>['ones','twos','threes','fours','fives','sixes'].reduce((a,k)=>a+(aiSc2[k]||0),0);
 const needsBonus=upSum_()<63;
@@ -260,16 +260,16 @@ else if(c.id==='sstr')weight=sc>0?sc*2:0;
 else if(c.id==='fhouse')weight=sc>0?sc*1.8:0;
 else if(c.id==='fourK')weight=sc*1.3;
 else if(c.id==='threeK')weight=sc*1.1;
-else if(c.id==='chance')weight=sc*0.7; // save chance for later
-// Bonus target: upper section values worth more if needed
+else if(c.id==='chance')weight=sc*0.7;
+// Bonus für oberen Bereich
 if(needsBonus&&['ones','twos','threes','fours','fives','sixes'].includes(c.id))weight*=1.2;
-// Never waste high-value categories on 0
+
 if(sc===0&&['kniffl','lstr','sstr','fhouse'].includes(c.id))weight=-50;
 else if(sc===0)weight=-1;
 if(weight>best){best=weight;bestId=c.id;}
 });
 if(!bestId){
-// Last resort: pick chance or lowest category
+// Chance
 const rem=CATS.filter(c=>aiSc2[c.id]===undefined);
 bestId=rem.find(c=>c.id==='chance')?.id||rem[rem.length-1]?.id;
 }
@@ -288,10 +288,10 @@ render();
 if(allPlayers[currentPlayerIdx]?.type==='ai')setTimeout(doAITurn,600);
 return;
 }
-// Roll
+// Würfeln
 dice=dice.map((v,i)=>held[i]?v:Math.ceil(Math.random()*6));
 rolls++;
-// Decide what to hold
+// Enscheidung, welche Würfel man behalten möchte
 held=bestHold(dice);
 render();
 setTimeout(()=>aiStep(rollsLeft-1),400);
@@ -317,12 +317,12 @@ const msg=numPlayers>1
 :`Fertig! Score: ${pT} Punkte`;
 document.getElementById('g-status').textContent=msg;
 fbSaveScore('kniffel',pT);
-// Close room so lobby removes it
+
 if(opts.onlineRoomId){
 apiCall('rooms/'+opts.onlineRoomId+'/sync','POST',{state:'closed',ts:Date.now()}).catch(()=>{});
 removeActiveLobby(opts.onlineRoomId);
 }
-// Show winner screen
+// Gewinnerbildschirm
 setTimeout(()=>{
 const ca=document.getElementById('canvas-area');
 if(!ca||document.getElementById('kniffel-end'))return;
@@ -354,14 +354,13 @@ const canRoll=rolls<3&&!rolling&&isHumanTurn&&!allDone;
 const btnLabel=['🎲 Würfeln','🎲 Nochmal (2/3)','🎲 Nochmal (3/3)','↓ Kategorie wählen'][Math.min(rolls,3)];
 const RING=['#00f5ff','#ff44ff','#ffcc00','#00e676','#ff6b35','#a78bfa'];
 
-// ── Layout logic ─────────────────────────────────────────
-// 1-2 players: scorecard LEFT, dice RIGHT
-// 3+ players:  scorecard TOP (compact), dice BOTTOM
+// ── Layout-Logik ─────────────────────────────────────────
+
 const stacked = numPlayers >= 3;
 
-// Fixed, sensible column widths - never stretch to fill
+
 const CAT_W = stacked ? 130 : 150;
-const COL_W = stacked ? 60 : 90;   // compact for many players
+const COL_W = stacked ? 60 : 90;   
 const becherSize = stacked ? 170 : 300;
 const rowPad = stacked ? 3 : 8;
 const fontSize = stacked ? 12 : 13;
@@ -369,7 +368,7 @@ const valSize = stacked ? 13 : 15;
 const avSize = stacked ? 26 : 36;
 const avFont = stacked ? 13 : 18;
 
-// ── Builders ────────────────────────────────────────────
+// ── Anzeigeelemente ────────────────────────────────────────────
 function scoreRow(cat){
 const curSc=scores[currentPlayerIdx];
 const curDone=curSc[cat.id]!==undefined;
@@ -459,9 +458,9 @@ ${allPlayers[currentPlayerIdx]?.type==='ai'?`<div style="background:rgba(185,79,
 </div>
 </div>`;
 
-// ── Final layout ────────────────────────────────────────
+// ── Layout ────────────────────────────────────────
 if(stacked){
-// TOP: scorecard full width | BOTTOM: dice panel
+// Oben: vollständige Punktekarte | Unten: Würfelbereich
 wrap.innerHTML=`<div style="display:flex;flex-direction:column;height:100%;font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden;background:#06060f">
 <div style="flex-shrink:0;background:#0a0a18;border-bottom:2px solid #151528;overflow-x:auto">${scoreTable}</div>
 <div style="flex:1;min-height:0;background:radial-gradient(ellipse at center,#0d0d22,#05050f)">${dicePanel}</div>
@@ -492,7 +491,7 @@ pos.forEach(([dx,dy],i)=>{if(mx>=dx-sz/2&&mx<=dx+sz/2&&my>=dy-sz/2&&my<=dy+sz/2)
 
 window.__kRoll=doRoll;
 window.__kChoose=doChoose;
-// Spectator update hook
+
 if(opts.isSpectator){
 window.__kSpectatorUpdate=(newScores,newDice,newHeld,newPlayerIdx)=>{
 if(newScores)newScores.forEach((sc,i)=>{scores[i]=sc;});
@@ -508,7 +507,7 @@ const ku=document.getElementById('kniffel-ui');if(ku){ku.style.display='none';ku
 delete window.__kRoll;delete window.__kChoose;
 };
 
-// Online: poll for other players' moves
+
 if(isOnlineKniffel){
 let lastTs=0;
 _safeInterval(async()=>{
@@ -518,11 +517,11 @@ if(!res)return;
 const d=res.sync||res;
 if(!d.type||(d.type!=='kniffel_move'&&d.type!=='kniffel_dice'))return;
 if(!d.ts||d.ts<=lastTs)return;
-if(d.playerIdx===myPlayerIdx)return; // own move, skip
+if(d.playerIdx===myPlayerIdx)return;
 lastTs=d.ts;
 
 if(d.type==='kniffel_dice'){
-// Show what other player rolled
+// Würfelergebnis anderer Spieler
 if(d.dice)dice=[...d.dice];
 if(d.held)held=[...d.held];
 if(d.rolls!==undefined)rolls=d.rolls;
@@ -531,7 +530,7 @@ render();
 return;
 }
 
-// kniffel_move: apply scores
+
 if(d.scores){
 d.scores.forEach((sc,i)=>{
 if(i!==myPlayerIdx)scores[i]=sc;
