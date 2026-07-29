@@ -4,13 +4,13 @@ const crypto = require('crypto');
 
 const PORT = process.env.PORT || 3000;
 const path = require('path');
-const ROOT = __dirname; // absolute path to project root
+const ROOT = __dirname; // absoluter Pfad zum Projektordner
 const DATA_FILE = path.join(ROOT, 'data.json');
 
 console.log('[Server] Root directory:', ROOT);
 console.log('[Server] Files present:', require('fs').readdirSync(ROOT).join(', '));
 
-// ── Data ─────────────────────────────────────────
+// Daten laden/speichern/hashen etc.
 function loadData() {
   try { if(fs.existsSync(DATA_FILE)) return JSON.parse(fs.readFileSync(DATA_FILE,'utf8')); } catch(e){}
   return { users:{}, rooms:{} };
@@ -19,7 +19,7 @@ function saveData(data) { fs.writeFileSync(DATA_FILE,JSON.stringify(data,null,2)
 function hash(str) { return crypto.createHash('sha256').update(str).digest('hex'); }
 function generateToken() { return crypto.randomBytes(32).toString('hex'); }
 
-// ── HTTP Server ───────────────────────────────────
+// Der HTTP-Server: Requests laden hier
 const server = http.createServer((req,res) => {
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');
@@ -37,7 +37,7 @@ const server = http.createServer((req,res) => {
     return;
   }
 
-  // ── Static files (css/, js/) ──────────────────────
+  // Auslieferungen statische Dateien (css/, js/)
   const MIME = {'.css':'text/css','.js':'application/javascript','.html':'text/html','.png':'image/png','.ico':'image/x-icon'};
   const ext = pathname.match(/\.[a-z]+$/i)?.[0];
   if(ext && MIME[ext]) {
@@ -64,20 +64,20 @@ const server = http.createServer((req,res) => {
   res.writeHead(404);res.end('Not found');
 });
 
-// ── WebSocket ─────────────────────────────────────
+// WebSocket-Kram für alles in Echtzeit
 let WebSocket;
 try { WebSocket = require('ws'); } catch(e) { console.log('ws not installed'); }
 
-// uid -> ws connection
-const onlineUsers = new Map(); // uid -> {ws, name, uid}
-const wsRooms = new Map();     // roomId -> {host, guest, state}
+// uid -> ws-Verbindung (Wer ist gerade Online?)
+const onlineUsers = new Map(); // uid -> {ws, name, uid}, wer grad online ist
+const wsRooms = new Map();     // roomId -> {host, guest, state}, offenen Spielräume
 const snakeGames = new Map();
 const pongGames = new Map();
 
-// ── SERVER-SIDE SNAKE LOOP ────────────────────────────────────
+// Snake game Loop läuft komplett auf dem Server
 function startSnakeServer(roomId) {
   if (snakeGames.has(roomId)) return;
-  const COLS=27, ROWS=22, TICK=100; // 100ms tick = 10 updates/sec
+  const COLS=27, ROWS=22, TICK=100; // alle 100ms ein Tick (10 Updates Pro Sekunde müssten reichen)
 
   function randomSnakeFood(snakes) {
     let f, tries=0;
@@ -98,7 +98,7 @@ function startSnakeServer(roomId) {
   function tick() {
     const room = wsRooms.get(roomId);
     if (!room || state.over) { clearInterval(loop); snakeGames.delete(roomId); return; }
-    if (!room.host || !room.guest) return; // wait for both
+    if (!room.host || !room.guest) return; // warten bis beide da sind
 
     state.tick++;
 
@@ -106,22 +106,22 @@ function startSnakeServer(roomId) {
       const p = state[pid];
       if (p.dead) return;
 
-      // Apply buffered direction
+      // zwischengespeicherte Richtung übernehmen
       p.dir = p.nextDir;
 
       const head = { x: p.snake[0].x + p.dir.x, y: p.snake[0].y + p.dir.y };
 
-      // Wrap-around (no walls)
+      // keine Wände: hinten raus, vorne wieder rein
       head.x = (head.x + COLS) % COLS;
       head.y = (head.y + ROWS) % ROWS;
-      // Self collision
+      // hat man sich selbst gebissen?
       if (p.snake.some(seg => seg.x === head.x && seg.y === head.y)) {
         p.dead = true; return;
       }
 
       p.snake.unshift(head);
 
-      // Food
+      // Futter gefressen?
       if (head.x === state.food.x && head.y === state.food.y) {
         p.score += 10;
         state.food = randomSnakeFood([state.p1.snake, state.p2.snake]);
@@ -130,7 +130,7 @@ function startSnakeServer(roomId) {
       }
     });
 
-    // Cross-collision (head into other snake)
+    // Kopf gegen andere Schlange: knallt man in den Gegner rein?
     if (!state.p1.dead && !state.p2.dead) {
       const h1=state.p1.snake[0], h2=state.p2.snake[0];
       const p1HitsP2 = state.p2.snake.some(s=>s.x===h1.x&&s.y===h1.y);
@@ -141,7 +141,7 @@ function startSnakeServer(roomId) {
 
     if (state.p1.dead || state.p2.dead) state.over = true;
 
-    // Broadcast — send only 10 head segments to reduce bandwidth
+    // an beide schicken (nur vorderste Segmente, spart Bandbreite)
     const msg = JSON.stringify({
       type: 'snakeState',
       p1: { snake: state.p1.snake.slice(0,20), score: state.p1.score, dead: state.p1.dead, len: state.p1.snake.length },
@@ -160,9 +160,9 @@ function startSnakeServer(roomId) {
   console.log('Snake server started for room', roomId);
 }
 
-// Pong physics run entirely on the host client.
-// The server only relays paddle/sync/bounce messages between players.
-// This stub exists to prevent ReferenceError if the game type is 'pong'.
+// Bei Pong rechnet Client die komplette Physik selbst
+// Server schiebt nur Paddle-/Sync-/Bounce-Nachrichten hin und her
+// Funktion gibt's nur, um ReferenceError zu verhindern (wenn game=='pong')
 function startPongServer(roomId) {
   console.log('[Pong] client-side relay mode for room', roomId);
 }
@@ -181,21 +181,21 @@ if(WebSocket) {
       try {
         const msg = JSON.parse(raw);
 
-        // ── AUTH: user comes online ──
+        // Auth: User kommt online
         if(msg.type === 'ping') {
           send(ws,{type:'pong',ts:msg.ts});
         }
 
         if(msg.type === 'igchat') {
-          // Forward to players in same room
+          // an Leute im selben Raum weiterleiten
           const roomId=msg.roomId||'';
           const data2=loadData();
           const room=roomId?data2.rooms[roomId]:null;
-          // Get UIDs of players in this room
+          // UIDs der Spieler in dem Raum holen
           const roomUids=room?[room.host?.uid,room.guest?.uid].filter(Boolean):[];
           wss.clients.forEach(c=>{
             if(c.readyState===WebSocket.OPEN&&c.uid!==ws.uid){
-              // Send to players in same room OR if no roomId, all online friends
+              // an alle im selben Raum (wenn keine roomId da ist, an alle Online-Freunde)
               const inRoom=roomUids.length?roomUids.includes(c.uid):true;
               if(inRoom) send(c,{...msg,uid:ws.uid});
             }
@@ -204,10 +204,10 @@ if(WebSocket) {
 
         if(msg.type === 'game_status') {
           ws.currentGame=msg.game||'';
-          // Update onlineUsers entry
+          // Eintrag in onlineUsers aktualisieren
           const ou=onlineUsers.get(ws.uid);
           if(ou)ou.currentGame=ws.currentGame;
-          // Broadcast to all connected clients
+          // an alle verbundenen Clients schicken
           wss.clients.forEach(c=>{
             if(c.readyState===WebSocket.OPEN&&c.uid!==ws.uid)
               send(c,{type:'game_status',uid:ws.uid,game:ws.currentGame,roomId:msg.roomId||''});
@@ -241,15 +241,15 @@ if(WebSocket) {
           ws.name = user.name;
           onlineUsers.set(user.uid, {ws, name:user.name, uid:user.uid});
           console.log(`[WS] ${user.name} online`);
-          // Confirm auth
+          // Auth bestätigen
           send(ws,{type:'auth_ok', uid:user.uid, name:user.name});
-          // Broadcast online status to friends
+          // MItteilen, dass man online ist
           broadcastPresence(user.uid, user.name, true);
-          // Send current online friends list
+          // die aktuelle Freundesliste schicken (Wer Online?)
           sendFriendsList(ws, user.uid, data);
         }
 
-        // ── FRIEND REQUEST ──
+        // Freundschaftsanfrage
         if(msg.type === 'friend_request') {
           const data = loadData();
           const fromUser = data.users && Object.values(data.users).find(u=>u.uid===ws.uid);
@@ -262,12 +262,12 @@ if(WebSocket) {
             toUser.friendRequests.push(ws.uid);
             saveData(data);
           }
-          // Notify recipient if online
+          // Info an Empfänger, wenn online
           const toWs = onlineUsers.get(msg.toUid)?.ws;
           if(toWs) send(toWs,{type:'friend_request', fromUid:ws.uid, fromName:ws.name});
         }
 
-        // ── FRIEND ACCEPT ──
+        // Freundschaftsanfrage annehmen
         if(msg.type === 'friend_accept') {
           const data = loadData();
           const me = Object.values(data.users).find(u=>u.uid===ws.uid);
@@ -279,13 +279,13 @@ if(WebSocket) {
           if(!them.friends.includes(ws.uid)) them.friends.push(ws.uid);
           me.friendRequests=(me.friendRequests||[]).filter(id=>id!==msg.fromUid);
           saveData(data);
-          // Notify both
+          // Info an beide
           send(ws,{type:'friend_added', uid:msg.fromUid, name:them.name});
           const themWs = onlineUsers.get(msg.fromUid)?.ws;
           if(themWs) send(themWs,{type:'friend_added', uid:ws.uid, name:me.name});
         }
 
-        // ── FRIEND DECLINE ──
+        // Freundschaftsanfrage ablehnen
         if(msg.type === 'friend_decline') {
           const data = loadData();
           const me = Object.values(data.users).find(u=>u.uid===ws.uid);
@@ -295,7 +295,7 @@ if(WebSocket) {
           }
         }
 
-        // ── SEARCH USERS ──
+        // User suchen
         if(msg.type === 'search_users') {
           const data = loadData();
           const q=(msg.query||'').toLowerCase().trim();
@@ -307,37 +307,37 @@ if(WebSocket) {
           send(ws,{type:'search_results', results});
         }
 
-        // ── DIRECT MESSAGE ──
+        // DM
         if(msg.type === 'dm') {
           const ts=Date.now();
-          // Store message
+          // Nachricht speichern
           const data2=loadData();
           if(!data2.dms)data2.dms={};
           const key=[ws.uid,msg.toUid].sort().join('_');
           if(!data2.dms[key])data2.dms[key]=[];
           data2.dms[key].push({fromUid:ws.uid,fromName:ws.name,toUid:msg.toUid,text:msg.text,ts});
-          // Keep last 200 messages per conversation
+          // nur letzte 200 Nachrichten speichern
           if(data2.dms[key].length>200)data2.dms[key]=data2.dms[key].slice(-200);
           saveData(data2);
-          // Deliver to recipient if online
+          // an den Empfänger zustellen (wenn on)
           const toWs = onlineUsers.get(msg.toUid)?.ws;
           if(toWs) send(toWs,{type:'dm', fromUid:ws.uid, fromName:ws.name, text:msg.text, ts});
-          // Confirm to sender
+          // Bestätigung an Absender, dass es raus ist
           send(ws,{type:'dm_sent', toUid:msg.toUid, text:msg.text, ts});
         }
 
-        // ── GAME INVITE ──
+        // Einladung zum Zocken
         if(msg.type === 'game_invite') {
           const toWs = onlineUsers.get(msg.toUid)?.ws;
           if(toWs) send(toWs,{type:'game_invite', fromUid:ws.uid, fromName:ws.name, game:msg.game, roomId:msg.roomId});
         }
 
-        // ── GAME ROOM: JOIN ──
+        // Spielraum beitreten
         if(msg.type === 'join') {
           const { roomId, role, name } = msg;
           ws.roomId = roomId; ws.role = role; ws.playerName = name||ws.name;
           if(role==='spectator'){
-            // Spectator - just add to room watchers
+            // Zuschauer in die Zuschauerliste vom Raum packen
             if(!wsRooms.has(roomId)) wsRooms.set(roomId,{host:null,guest:null,state:{},spectators:[]});
             const room=wsRooms.get(roomId);
             if(!room.spectators)room.spectators=[];
@@ -348,14 +348,14 @@ if(WebSocket) {
           if(!wsRooms.has(roomId)) wsRooms.set(roomId,{host:null,guest:null,state:{},spectators:[]});
           const room = wsRooms.get(roomId);
           room[role] = ws;
-          // Cache game type from DB into wsRooms for quick access
+          // Spieltyp aus der DB in wsRooms zwischenspeichern, damit man schneller drankommt
           if(!room.gameType){
             try{const d=loadData();room.gameType=(d.rooms&&d.rooms[roomId]&&d.rooms[roomId].game)||'';}catch(e){}
           }
           if(room.host && room.guest) {
             send(room.host,{type:'start',opponentName:room.guest.playerName,role:'host'});
             send(room.guest,{type:'start',opponentName:room.host.playerName,role:'guest'});
-            // Detect game type from room data
+            // Spieltyp in Raumdaten finden
             try{
               const data3=loadData();
               const gameRoom=data3.rooms&&data3.rooms[roomId];
@@ -365,17 +365,17 @@ if(WebSocket) {
               else if(gameType==='pong') setTimeout(()=>startPongServer(roomId),100);
             }catch(e){console.error('game start error:',e);}
           } else { send(ws,{type:'waiting',roomId}); }
-          } // end else spectator
+          } // Ende vom else (wenn kein Zuschauer)
         }
 
-        // ── GAME SYNC ──
+        // Sync Spielstand
         if(msg.type === 'snakeDir') {
           const game=snakeGames.get(ws.roomId);
           if(game){
             const pid=ws.role==='host'?'p1':'p2';
             const d=msg.dir;
             const cur=game.state[pid].dir;
-            // Buffer next direction, prevent 180° reversal
+            // nächste Richtung puffern (keine 180°-Wende, sonst fährt man in sich selbst)
             if(!(d.x===-cur.x&&d.y===-cur.y)){
               game.state[pid].nextDir=d;
             }
@@ -383,7 +383,7 @@ if(WebSocket) {
         }
 
         if(msg.type === 'battle_shot' || msg.type === 'battle_result' || msg.type === 'battle_rematch') {
-          // Forward to the other player in the same room
+          // an den anderen Spieler im selben Raum weiterleiten
           const room = wsRooms.get(ws.roomId);
           if(!room) return;
           const other = ws.role==='host'?room.guest:room.host;
@@ -391,13 +391,13 @@ if(WebSocket) {
         }
 
         if(msg.type === 'paddleSync') {
-          // Update server-side pong state
+          // den Pong-Stand serverseitig updaten
           const game=pongGames.get(ws.roomId);
           if(game){
             if(msg.p1y!==undefined)game.state.p1y=msg.p1y*game.state.H;
             if(msg.p2y!==undefined)game.state.p2y=msg.p2y*game.state.H;
           }
-          // Also relay for client prediction
+          // Info weitergeben, damit der Client vorhersagen kann
           const room=wsRooms.get(ws.roomId);
           if(room){
             const other=ws.role==='host'?room.guest:room.host;
@@ -408,7 +408,7 @@ if(WebSocket) {
         if(msg.type === 'sync') {
           const room = wsRooms.get(ws.roomId);
           if(!room) return;
-          // Update last activity
+          // Zeitstempel setzen
           const da=loadData();
           if(da.rooms&&da.rooms[ws.roomId]){da.rooms[ws.roomId].lastActivity=Date.now();saveData(da);}
           const other = ws.role==='host'?room.guest:room.host;
@@ -420,7 +420,7 @@ if(WebSocket) {
         }
 
         if(msg.type === 'frame') {
-          // Forward canvas frame to all spectators
+          // Canvas-Bild an Zuschauer weiterleiten
           const room = wsRooms.get(ws.roomId);
           if(!room) return;
           (room.spectators||[]).forEach(sp=>{
@@ -428,21 +428,21 @@ if(WebSocket) {
           });
         }
 
-        // ── PADDLE ──
+        // Paddle (Schläger Pong)
         if(msg.type === 'paddle') {
           const room = wsRooms.get(ws.roomId);
           if(!room||!room.host) return;
           if(room.host.readyState===WebSocket.OPEN) send(room.host,{type:'paddle',p2y:msg.p2y});
         }
 
-        // ── BOUNCE ──
+        // Ball prallt ab
         if(msg.type === 'bounce') {
           const room = wsRooms.get(ws.roomId);
           if(!room||!room.host) return;
           if(room.host.readyState===WebSocket.OPEN) send(room.host,{type:'bounce',bx:msg.bx,by:msg.by,bvx:msg.bvx,bvy:msg.bvy,p2y:msg.p2y});
         }
 
-        // ── REMATCH ──
+        // Revanche
         if(msg.type === 'rematch') {
           const room = wsRooms.get(ws.roomId);
           if(!room) return;
@@ -450,7 +450,7 @@ if(WebSocket) {
           room.rematchVotes.add(ws.role);
           if(room.rematchVotes.has('host')&&room.rematchVotes.has('guest')) {
             room.rematchVotes.clear(); room.state={};
-            // Restart game loop for rematch
+            // Game Loop für Start Revanche
             if(snakeGames.has(ws.roomId)){
               const old=snakeGames.get(ws.roomId);
               if(old&&old.loop)clearInterval(old.loop);
@@ -463,7 +463,7 @@ if(WebSocket) {
             }
             if(room.host) send(room.host,{type:'rematch_go'});
             if(room.guest) send(room.guest,{type:'rematch_go'});
-            // Restart game loop after short delay
+            // Neustart Game-Loop nach kurzer Verzögerung
             try{
               const data2=loadData();
               const gameRoom=data2.rooms&&data2.rooms[ws.roomId];
@@ -496,10 +496,10 @@ if(WebSocket) {
             const other = ws.role==='host'?room.guest:room.host;
             if(other&&other.readyState===WebSocket.OPEN) send(other,{type:'opponent_left'});
             room[ws.role]=null;
-            // Mark room as closed
+            // Raum geschlossen markieren
             const data2=loadData();
             if(data2.rooms&&data2.rooms[ws.roomId]){
-              // For started games: only close if NO other players connected
+              // bei laufenden Spielen nur schließen, wenn sonst keiner mehr drin ist
               if(data2.rooms[ws.roomId].state==='started'){
                 const roomPlayers=data2.rooms[ws.roomId].players||[];
                 const anyOnline=roomPlayers.some(p=>p.uid!==ws.uid&&onlineUsers.has(p.uid));
@@ -525,7 +525,7 @@ function send(ws, data) {
 }
 
 function broadcastPresence(uid, name, online, avatar) {
-  // Tell all online friends about this user's status
+  // Online-Freunden Status von User durchgeben
   const data = loadData();
   const user = Object.values(data.users).find(u=>u.uid===uid);
   if(!user) return;
@@ -551,7 +551,7 @@ function sendFriendsList(ws, uid, data) {
   send(ws,{type:'friends_list',friends,requests});
 }
 
-// ── API ───────────────────────────────────────────
+// alle API-Routen 
 function handleAPI(pathname, method, body, req, res) {
   const data = loadData();
   const sendJSON = (code,obj) => {
@@ -613,7 +613,7 @@ function handleAPI(pathname, method, body, req, res) {
   if(pathname==='/api/delete-account'&&method==='POST'){
     const user=getUser();
     if(!user) return sendJSON(401,{error:'Nicht eingeloggt'});
-    // Remove from all friends lists
+    // aus allen Freundeslisten rauswerfen
     Object.values(data.users).forEach(u=>{
       u.friends=(u.friends||[]).filter(f=>f!==user.uid);
       u.friendRequests=(u.friendRequests||[]).filter(f=>f!==user.uid);
@@ -635,7 +635,7 @@ function handleAPI(pathname, method, body, req, res) {
     const user=getUser();
     if(!user) return sendJSON(401,{error:'Nicht eingeloggt'});
     const {game,score,syncTotal,syncScores}=body;
-    // If client is syncing full data (syncTotal provided), use that
+    // wenn der Client die kompletten Daten mitschickt (syncTotal), die nehmen
     if(syncTotal&&syncTotal>(user.total||0)){
       user.total=syncTotal;
       if(syncScores){Object.keys(syncScores).forEach(g=>{if(!user.scores[g]||syncScores[g]>user.scores[g])user.scores[g]=syncScores[g];});}
@@ -647,7 +647,7 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,{ok:true,scores:user.scores,total:user.total});
   }
 
-  // Search users
+  // Nutzer suchen
   if(pathname === '/api/users/search' && method === 'GET'){
   const user = getUser();
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
@@ -666,7 +666,7 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,{results});
   }
 
-  // Send friend request
+  // offene Anfragen/Freundesliste laden
   if(pathname==='/api/friends/requests'&&method==='GET'){
     const user=getUser();
     if(!user) return sendJSON(401,{error:'Nicht eingeloggt'});
@@ -703,13 +703,13 @@ function handleAPI(pathname, method, body, req, res) {
     if(toUser.friends.includes(user.uid)) return sendJSON(200,{ok:true,already:true});
     if(!toUser.friendRequests.includes(user.uid)) toUser.friendRequests.push(user.uid);
     saveData(data);
-    // Notify via WS if online
+    // Info per WebSocket, wenn online
     const toWs=onlineUsers.get(toUid)?.ws;
     if(toWs) send(toWs,{type:'friend_request',fromUid:user.uid,fromName:user.name});
     return sendJSON(200,{ok:true});
   }
 
-  // Accept friend request
+  // Freundschaftsanfrage annehmen
   if(pathname==='/api/friends/accept'&&method==='POST'){
     const user=getUser();
     if(!user) return sendJSON(401,{error:'Nicht eingeloggt'});
@@ -727,7 +727,7 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,{ok:true});
   }
 
-  // Get DM history
+  // DM-Verlauf holen
   if(pathname.match(/\/api\/dm\/\w+/)&&method==='GET'){
     const user=getUser();
     if(!user) return sendJSON(401,{error:'Nicht eingeloggt'});
@@ -737,26 +737,26 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,{messages:msgs});
   }
 
-  // List all active lobbies
+  // aktive Lobbys auflisten
   if(pathname==='/api/lobbies'&&method==='GET'){
     const now=Date.now();
-    // Clean up old rooms (>30min)
+    // alte Räume aufräumen (>30min)
     Object.keys(data.rooms||{}).forEach(id=>{
       const r=data.rooms[id];
-      // Keep started games for 2h, closed games cleanup immediately, others 30min
+      // laufende Spiele 2h behalten, geschlossene sofort weg, der Rest nach 30min
       if(r.state==='started'&&(now-r.created)<7200000) return;
       if(r.state==='closed'&&(now-(r.closedAt||r.created||0))>600000) { delete data.rooms[id]; return; }
       if((now-r.created)>1800000) delete data.rooms[id];
     });
     saveData(data);
-    // Also check which rooms have active WS connections
-    // Only show rooms with ACTIVE WebSocket connections
+    // checken, welche Räume noch aktive WS-Verbindungen haben
+    // nur Räume zeigen, an denen wirklich noch jemand per WebSocket dranhängt
     const activeRoomIds=new Set([...wsRooms.keys()].filter(id=>{
       const r=wsRooms.get(id);
       return (r.host&&r.host.readyState===1)||(r.guest&&r.guest.readyState===1);
     }));
     const now2=Date.now();
-    // Auto-expire rooms with no activity for 2 minutes
+    // Räume, in denen 2 Minuten nix passiert ist, automatisch weg
     Object.keys(data.rooms||{}).forEach(id=>{
       const r=data.rooms[id];
       const lastActivity=r.lastActivity||r.created||0;
@@ -769,7 +769,7 @@ function handleAPI(pathname, method, body, req, res) {
       .filter(r=>{
         if(r.state==='closed') return false;
         const lastActivity=r.lastActivity||r.created||0;
-        return (now2-lastActivity)<120000; // only show if active in last 2min
+        return (now2-lastActivity)<120000; // nur zeigen, wenn in den letzten 2min was passiert ist
       })
       .map(r=>({
         roomId:r.roomId,game:r.game,
@@ -785,11 +785,11 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,{lobbies});
   }
 
-  // Create public lobby (vs AI or waiting)
+  // öffentliche Lobby aufmachen (gegen KI oder auf Mitspieler warten)
   if(pathname==='/api/lobbies/create'&&method==='POST'){
     const user=getUser()||{uid:'anon',name:body.hostName||'Spieler'};
     const {game,vsAI,roomId:existingRoomId}=body;
-    // If roomId provided, just update that room to be public
+    // wenn roomId da ist, Raum einfach auf öffentlich stellen
     if(existingRoomId&&data.rooms[existingRoomId]){
       data.rooms[existingRoomId].vsAI=!!vsAI;
       data.rooms[existingRoomId].state=vsAI?'playing':'waiting';
@@ -809,7 +809,7 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,{ok:true,roomId});
   }
 
-  // Spectate a room (increment spectator count)
+  // einem Raum als Zuschauer zusehen (Zuschauerzähler +1)
   if(pathname.match(/\/api\/rooms\/\w+\/spectate/)&&method==='POST'){
     const roomId=pathname.split('/')[3];
     const room=data.rooms[roomId];
@@ -819,7 +819,7 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,{ok:true,room});
   }
 
-  // Kniffel: get room players
+  // Kniffel: die Spieler im Raum holen
   if(pathname.match(/\/api\/rooms\/\w+\/players/)&&method==='GET'){
     const roomId=pathname.split('/')[3];
     const room=data.rooms[roomId];
@@ -827,7 +827,7 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,{players:room.players||[room.host],state:room.state,roomId});
   }
 
-  // Kniffel: join as additional player
+  // Kniffel: als weiterer Spieler dazukommen
   if(pathname.match(/\/api\/rooms\/\w+\/join-multi/)&&method==='POST'){
     const user=getUser()||{uid:'anon'+Date.now(),name:body.name||'Spieler'};
     const roomId=pathname.split('/')[3];
@@ -840,7 +840,7 @@ function handleAPI(pathname, method, body, req, res) {
       room.players.push({uid:user.uid,name:user.name});
     }
     saveData(data);
-    // Notify ALL current players via WS
+    // Info an aktuelle Spieler per WS
     (room.players||[]).forEach(p=>{
       const pw=onlineUsers.get(p.uid)?.ws;
       if(pw) send(pw,{type:'player_joined',player:{uid:user.uid,name:user.name},players:room.players});
@@ -848,7 +848,7 @@ function handleAPI(pathname, method, body, req, res) {
     return sendJSON(200,{ok:true,players:room.players});
   }
 
-  // Kniffel: host starts the game
+  // Kniffel: Spielstart durch Host
   if(pathname.match(/\/api\/rooms\/\w+\/start/)&&method==='POST'){
     const user=getUser();
     const roomId=pathname.split('/')[3];
@@ -857,7 +857,7 @@ function handleAPI(pathname, method, body, req, res) {
     if(room.host?.uid!==user?.uid) return sendJSON(403,{error:'Nur der Host kann starten'});
     room.state='started';
     saveData(data);
-    // Notify all players via WS
+    // Spielern per WS Bescheid geben
     (room.players||[]).forEach(p=>{
       const pw=onlineUsers.get(p.uid)?.ws;
       if(pw) send(pw,{type:'game_start',players:room.players,roomId});
@@ -903,7 +903,7 @@ function handleAPI(pathname, method, body, req, res) {
     const room=data.rooms[roomId];
     if(!room) return sendJSON(404,{error:'Raum nicht gefunden'});
     room.sync={...room.sync,...body,ts:Date.now()};
-    room.lastActivity=Date.now(); // keep alive
+    room.lastActivity=Date.now(); // am Leben halten
     saveData(data);
     return sendJSON(200,room.sync);
   }
@@ -917,7 +917,7 @@ function handleAPI(pathname, method, body, req, res) {
 
   if(pathname.match(/\/api\/rooms\/\w+\/rematch/)&&method==='POST'){
     const roomId=pathname.split('/')[3];
-    // Room might be deleted after game end — recreate from WS memory if needed
+    // Raum nach Spielende evtl. schon gelöscht (ggf. aus WS-Speicher neu bauen)
     if(!data.rooms[roomId]){
       const wsRoom=wsRooms.get(roomId);
       if(!wsRoom) return sendJSON(404,{error:'Raum nicht gefunden'});
@@ -927,13 +927,13 @@ function handleAPI(pathname, method, body, req, res) {
     const room=data.rooms[roomId];
     if(!room.rematch) room.rematch={};
     const {player}=body;
-    // If bothReady already set recently, both players get the signal
+    // wenn "beide bereit" grad eben schon gesetzt war, kriegen beide das Signal
     const alreadyReady=room.rematch.readyAt&&(Date.now()-room.rematch.readyAt)<10000;
     if(!alreadyReady) room.rematch[player]=true;
     const bothReady=alreadyReady||(room.rematch.host&&room.rematch.guest);
     if(bothReady){
       if(!alreadyReady){
-        // First time bothReady: reset room for new game
+        // erstes Mal "beide bereit": Raum für neues Spiel zurücksetzen
         room.rematch={readyAt:Date.now()};
         room.state='waiting';
         room.closedAt=null;
